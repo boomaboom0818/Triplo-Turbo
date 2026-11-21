@@ -52,11 +52,28 @@ def hero_decision(g, o, profile, events, rng, probe=False, session=None):
 
 
 def apply(g,o,act,events):
-    i=o.position;events.append(dict(type='player_action',hand_id='h',seat=i,action=('raise' if isinstance(act,int) else 'check' if act=='call' and not o.call else act)))
+    i=o.position
+    st_names=('preflop','flop','turn','river')
+    pot_b=10*o.pot
+    owing=10*o.call
+    if isinstance(act,int):
+        kind='raise'
+        delta=max(0,10*act-10*g.bets[i])
+    elif act=='call' and not o.call:
+        kind='check'
+        delta=0
+    elif act=='call':
+        kind='call'
+        delta=min(owing,10*g.stacks[i])
+    else:
+        kind=act
+        delta=0
     if isinstance(act,int) and act not in o.legal:
         assert g.can_raise() and max(g.bets)<act<=g.bets[i]+g.stacks[i]
         g.history.append((o.player,i,o.street,act,o.pot,o.call));g.act(act,checked=False)
     else:g.act(act)
+    next_st='showdown' if not g.live else (st_names[g.street] if g.street<len(st_names) else 'river')
+    events.append(dict(type='player_action',hand_id='h',seat=i,street=next_st,action=kind,pot_before=pot_b,to_call_before=owing,contribution_delta=delta))
 
 
 def block(job):

@@ -162,40 +162,47 @@ pub fn opp_response_probs(
     let f = bet_to_pot.max(0.10);
 
     // Indifference bet-to-pot threshold per bucket for an average player (0..=9).
+    // Calibrated to real OpenPoker response curve (3,854 hands):
+    // - Flop overcards/weak pairs float small bets (~33% pot) more often (kills cheap OOP donk-bluffs)
+    // - River small bets (<=0.40x) get called 56.7% (unlocks thin river value!)
+    // - Strong pairs/two-pair still call 30-45% vs large turn/river bets
     let base_thresh: f64 = match bucket {
         0 => 0.08,                                // Pure air
-        1 => 0.20,                                // Overcards / Ace-high
-        2 => if is_river { 0.34 } else { 0.44 },  // Bottom / weak pair
-        3 => if is_river { 0.56 } else { 0.70 },  // Middle pair
-        4 => if is_river { 0.42 } else { 0.92 },  // Strong draw (flop/turn) or weak TP (river)
-        5 => if is_river { 0.92 } else { 1.08 },  // Top pair medium kicker
-        6 => if is_river { 1.38 } else { 1.55 },  // Top pair good kicker / overpair
-        7 => if is_river { 2.35 } else { 2.65 },  // Two pair / trips
-        8 => if is_river { 4.80 } else { 5.20 },  // Set / straight / flush
+        1 => if is_river { 0.24 } else { 0.24 },  // Overcards / Ace-high
+        2 => if is_river { 0.44 } else { 0.46 },  // Bottom / weak pair
+        3 => if is_river { 0.68 } else { 0.72 },  // Middle pair
+        4 => if is_river { 0.54 } else { 0.94 },  // Strong draw (flop/turn) or weak TP (river)
+        5 => if is_river { 0.98 } else { 1.10 },  // Top pair medium kicker
+        6 => if is_river { 1.45 } else { 1.60 },  // Top pair good kicker / overpair
+        7 => if is_river { 2.50 } else { 2.75 },  // Two pair / trips
+        8 => if is_river { 5.00 } else { 5.30 },  // Set / straight / flush
         _ => 18.0,                                // Full house / quads / nut flush
     };
 
     // Modulate threshold by opponent stickiness & fold_to_bet
-    let fold_adj = (0.42 / (hud.fold_to_bet + fold_bias).clamp(0.12, 0.82)).powf(0.75);
+    let fold_adj = (0.44 / (hud.fold_to_bet + fold_bias).clamp(0.12, 0.85)).powf(0.76);
     let sticky_mult = (0.55 + 1.15 * sticky) * fold_adj;
     // Someone who ALREADY bet (street_raises == 1) or ALREADY raised (street_raises >= 2)
     // is much more committed and folds far less often than a checked range!
     let commit_mult = match street_raises {
         0 => 1.0,
-        1 => 1.25,
-        _ => 2.20,
+        1 => 1.28,
+        _ => 2.25,
     };
     let eff_thresh = (base_thresh * sticky_mult * commit_mult).max(0.04);
 
     // Logistic elasticity in log(f / eff_thresh): sharply folds non-nut hands vs huge overbets
-    // against regs, while remaining inelastic for pairs against confirmed calling stations!
-    let is_station_opp = hud.fold_to_bet < 0.30 && hud.confidence > 0.30;
+    // against regs, while remaining inelastic for pairs against confirmed calling stations
+    // and matching real river small-bet call rates!
+    let is_station_opp = hud.fold_to_bet < 0.32 && hud.confidence > 0.25;
     let k = if is_station_opp && bucket >= 2 {
-        1.15
+        1.10
+    } else if is_river && f <= 0.45 && bucket >= 2 {
+        1.55
     } else if bucket >= 5 {
-        2.35
+        1.90
     } else {
-        2.05
+        1.85
     };
     let ratio = eff_thresh / f;
     let mut p_fold = 1.0 / (1.0 + ratio.powf(k));

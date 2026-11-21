@@ -22,6 +22,15 @@ enum Archetype {
     FitOrFold,
     PotOddsBot,
     Profile28,
+    /// Calibrated to real OpenPoker regulars (Kairo/OMGtheNutsss/minhcasa/Kaiel/vivilma):
+    /// ~27% VPIP, ~15% PFR, ~1% 3B, ~18% cbet, ~24% fold-to-bet, ~24% small-raise when strong!
+    PassiveTrappy,
+    /// Calibrated to real OpenPoker tight-foldy regs (Winters/ramses_888):
+    /// ~21% VPIP, ~13% PFR, ~3.5% 3B, ~35% cbet, ~65% fold-to-bet, value-heavy barrels.
+    TightFoldy,
+    /// Calibrated to real OpenPoker hyper-LAGs (RoRo/Unkn0wn):
+    /// ~52% VPIP, ~40% PFR, ~10% 3B, ~65% cbet, ~50% fold-to-bet, polarized big bets.
+    HyperLag,
 }
 
 fn tag_params() -> V2Params {
@@ -97,7 +106,9 @@ struct HandMeta {
     street_seen: usize,
     checked_street: [bool; 6],
     pf_line: [PreflopLine; 6],
-    post_actions: [Vec<(usize, u8, f32)>; 6],
+    post_actions: [Vec<(usize, u8, f32, bool, bool)>; 6],
+    post_barrels: [u8; 6],
+    barreled_this_street: [bool; 6],
 }
 
 impl HandMeta {
@@ -107,10 +118,11 @@ impl HandMeta {
             self.street_raises = 0;
             self.street_aggressor = None;
             self.checked_street = [false; 6];
+            self.barreled_this_street = [false; 6];
         }
     }
 
-    fn record_action(&mut self, seat: usize, street: usize, a: Action, v: &View) {
+    fn record_action(&mut self, seat: usize, street: usize, a: Action, v: &View, active_cnt: usize) {
         self.on_street(street);
         let call = v.legal.call.unwrap_or(0);
         let is_raise = matches!(a, Action::Raise(_))
@@ -140,34 +152,48 @@ impl HandMeta {
             }
         } else {
             let pot_f = v.pot.max(1) as f32;
-            let (kind, ratio) = match a {
+            let pot_before_bet_f = v.pot.saturating_sub(call).max(1) as f32;
+            let is_mw = active_cnt >= 3;
+            let is_donk = street == 1
+                && self.street_raises == 0
+                && self.pf_raises >= 1
+                && self.pfa_seat.is_some_and(|p| p != seat);
+            let (kind, ratio, donk_flag) = match a {
                 Action::Check => {
                     self.checked_street[seat] = true;
-                    (0u8, 0.0f32)
+                    (0u8, 0.0f32, false)
                 }
-                Action::Call => (1u8, call as f32 / pot_f),
+                Action::Call => (1u8, call as f32 / pot_before_bet_f, false),
                 Action::Raise(to) => {
                     let add = to.saturating_sub(v.bet);
                     let r = add as f32 / pot_f;
                     let k = if self.street_raises == 0 { 2u8 } else { 3u8 };
                     self.street_raises = self.street_raises.saturating_add(1);
                     self.street_aggressor = Some(seat);
-                    (k, r)
+                    if !self.barreled_this_street[seat] {
+                        self.barreled_this_street[seat] = true;
+                        self.post_barrels[seat] = self.post_barrels[seat].saturating_add(1);
+                    }
+                    (k, r, k == 2 && is_donk)
                 }
                 Action::AllIn => {
-                    let r = v.stack as f32 / pot_f;
                     if is_raise {
+                        let r = v.stack as f32 / pot_f;
                         let k = if self.street_raises == 0 { 2u8 } else { 3u8 };
                         self.street_raises = self.street_raises.saturating_add(1);
                         self.street_aggressor = Some(seat);
-                        (k, r)
+                        if !self.barreled_this_street[seat] {
+                            self.barreled_this_street[seat] = true;
+                            self.post_barrels[seat] = self.post_barrels[seat].saturating_add(1);
+                        }
+                        (k, r, k == 2 && is_donk)
                     } else {
-                        (1u8, r)
+                        (1u8, v.stack as f32 / pot_before_bet_f, false)
                     }
                 }
                 Action::Fold => return,
             };
-            self.post_actions[seat].push((street, kind, ratio));
+            self.post_actions[seat].push((street, kind, ratio, is_mw, donk_flag));
         }
     }
 }
@@ -208,14 +234,24 @@ fn build_v2_context(
         let j_pos = pos_of(j);
         let mut range = ComboRange::from_preflop(j_pos, meta.pf_line[j], &j_hud, dead);
         if !v.board.is_empty() {
-            for &(st, kind, ratio) in &meta.post_actions[j] {
+            for &(st, kind, ratio, is_mw, is_donk) in &meta.post_actions[j] {
                 let (b_slice, bi) = match st {
                     1 if v.board.len() >= 3 => (&v.board[..3], b3_info.as_ref().unwrap()),
                     2 if v.board.len() >= 4 => (&v.board[..4], b4_info.as_ref().unwrap()),
                     3 if v.board.len() == 5 => (&v.board[..5], b5_info.as_ref().unwrap()),
                     _ => continue,
                 };
-                range.update_postflop(b_slice, mask(b_slice), bi, kind, ratio, st, &j_hud);
+                range.update_postflop(
+                    b_slice,
+                    mask(b_slice),
+                    bi,
+                    kind,
+                    ratio,
+                    st,
+                    &j_hud,
+                    is_mw,
+                    is_donk,
+                );
             }
         }
         opponents.push(V2Opp {
@@ -228,6 +264,7 @@ fn build_v2_context(
             range,
             is_aggressor: meta.street_aggressor == Some(j),
             is_live: h.stack[j] > 0,
+            barrels: meta.post_barrels[j],
         });
     }
 
@@ -435,6 +472,129 @@ fn archetype_action(
                 l.passive().unwrap()
             }
         }
+        Archetype::PassiveTrappy => {
+            // Matches real OpenPoker bots like Kairo / OMGtheNutsss / minhcasa / Kaiel / vivilma:
+            // ~27% VPIP, ~15% PFR, ~1% 3B, ~18% cbet, ~24% fold-to-bet, ~24% small-raise (0.4x) when strong/TP!
+            if v.board.is_empty() {
+                if meta.pf_raises == 0 && score >= 0.72 && l.raise.is_some() {
+                    return Action::Raise((2.5 * BB as f64).round() as Chips).clamp_to(l);
+                }
+                if meta.pf_raises == 1 && score >= 0.94 && l.raise.is_some() {
+                    return Action::Raise(((v.bet + call) as f64 * 2.8) as Chips).clamp_to(l);
+                }
+                if l.check {
+                    return Action::Check;
+                }
+                if l.call.is_some() && ((cost_bb <= 1.2 && score >= 0.48) || (cost_bb <= 4.0 && score >= 0.54)) {
+                    return Action::Call;
+                }
+                l.passive().unwrap()
+            } else {
+                let bi = BoardFast::analyze(&v.board);
+                let b = crate::range::postflop_bucket(v.hole, &v.board, mask(&v.board), &bi);
+                if call == 0 {
+                    // Low bet-when-checked-to (~20%): mostly checks unless strong pair+ or value!
+                    if (b >= 6 || (b == 5 && rng.gen_bool(0.30))) && l.raise.is_some() {
+                        let frac = if b >= 7 { 0.72 } else { 0.58 };
+                        return Action::Raise(v.bet + (pot * frac) as Chips).clamp_to(l);
+                    }
+                    return Action::Check;
+                }
+                // Facing a bet: rarely folds pairs (f2b ~24%), small-raises (0.4x pot) with TP+/draws (~24% r2b)!
+                if (b >= 6 || (b == 5 && rng.gen_bool(0.35)) || (b == 4 && h.street < 3 && rng.gen_bool(0.30)))
+                    && meta.street_raises < 2
+                    && l.raise.is_some()
+                {
+                    let to = v.bet + call + ((pot + call as f64) * 0.42) as Chips;
+                    return Action::Raise(to).clamp_to(l);
+                }
+                if l.call.is_some() && (b >= 2 || (b == 1 && call as f64 <= pot * 0.55)) {
+                    return Action::Call;
+                }
+                l.passive().unwrap()
+            }
+        }
+        Archetype::TightFoldy => {
+            // Matches Winters / ramses_888: ~21% VPIP, ~13% PFR, ~3.5% 3B, ~35% cbet, ~65% fold-to-bet!
+            if v.board.is_empty() {
+                if meta.pf_raises == 0 && score >= 0.74 && l.raise.is_some() {
+                    return Action::Raise((2.5 * BB as f64).round() as Chips).clamp_to(l);
+                }
+                if meta.pf_raises == 1 && score >= 0.90 && l.raise.is_some() {
+                    return Action::Raise(((v.bet + call) as f64 * 3.0) as Chips).clamp_to(l);
+                }
+                if l.check {
+                    return Action::Check;
+                }
+                if l.call.is_some() && cost_bb <= 3.5 && score >= 0.66 {
+                    return Action::Call;
+                }
+                l.passive().unwrap()
+            } else {
+                let bi = BoardFast::analyze(&v.board);
+                let b = crate::range::postflop_bucket(v.hole, &v.board, mask(&v.board), &bi);
+                if call == 0 {
+                    if (b >= 5 || (meta.pfa_seat == Some(seat) && h.street == 1 && rng.gen_bool(0.25)))
+                        && l.raise.is_some()
+                    {
+                        let frac = if b >= 7 { 0.85 } else { 0.60 };
+                        return Action::Raise(v.bet + (pot * frac) as Chips).clamp_to(l);
+                    }
+                    return Action::Check;
+                }
+                if b >= 7 && meta.street_raises < 2 && l.raise.is_some() {
+                    return Action::Raise(v.bet + call + ((pot + call as f64) * 0.85) as Chips).clamp_to(l);
+                }
+                if l.call.is_some()
+                    && (b >= 6 || (b == 5 && call as f64 <= pot * 0.85) || (b == 4 && h.street < 3 && call as f64 <= pot * 0.60))
+                {
+                    return Action::Call;
+                }
+                l.passive().unwrap()
+            }
+        }
+        Archetype::HyperLag => {
+            // Matches RoRo / Unkn0wn: ~52% VPIP, ~40% PFR, ~10% 3B, ~65% cbet, ~50% f2b, big polar bets!
+            if v.board.is_empty() {
+                if meta.pf_raises == 0 && (score >= 0.44 || rng.gen_bool(0.12)) && l.raise.is_some() {
+                    return Action::Raise((3.0 * BB as f64).round() as Chips).clamp_to(l);
+                }
+                if meta.pf_raises == 1 && (score >= 0.80 || rng.gen_bool(0.08)) && l.raise.is_some() {
+                    return Action::Raise(((v.bet + call) as f64 * 3.2) as Chips).clamp_to(l);
+                }
+                if l.check {
+                    return Action::Check;
+                }
+                if l.call.is_some() && cost_bb <= 5.0 && score >= 0.44 {
+                    return Action::Call;
+                }
+                l.passive().unwrap()
+            } else {
+                let bi = BoardFast::analyze(&v.board);
+                let b = crate::range::postflop_bucket(v.hole, &v.board, mask(&v.board), &bi);
+                if call == 0 {
+                    if (b >= 5 || b == 4 || rng.gen_bool(if h.street == 1 { 0.48 } else { 0.24 }))
+                        && l.raise.is_some()
+                    {
+                        let frac = if b >= 7 || rng.gen_bool(0.30) { 1.25 } else { 0.65 };
+                        return Action::Raise(v.bet + (pot * frac) as Chips).clamp_to(l);
+                    }
+                    return Action::Check;
+                }
+                if (b >= 7 || (b == 4 && h.street < 3 && rng.gen_bool(0.25)))
+                    && meta.street_raises < 2
+                    && l.raise.is_some()
+                {
+                    return Action::Raise(v.bet + call + ((pot + call as f64) * 1.10) as Chips).clamp_to(l);
+                }
+                if l.call.is_some()
+                    && (b >= 5 || (b >= 3 && call as f64 <= pot * 0.75) || (b == 4 && h.street < 3))
+                {
+                    return Action::Call;
+                }
+                l.passive().unwrap()
+            }
+        }
     }
 }
 
@@ -572,7 +732,7 @@ fn run_session(
                 Some(hero),
                 i,
             );
-            meta.record_action(i, h.street, a, &v);
+            meta.record_action(i, h.street, a, &v, h.active().count());
             assert!(h.apply(a));
         }
 
@@ -607,6 +767,16 @@ fn a_of(d: &Decision) -> Action {
 fn environments() -> Vec<(&'static str, Chips, [Archetype; 5])> {
     use Archetype::*;
     vec![
+        (
+            "openpoker_live_meta_250bb",
+            250,
+            [PassiveTrappy, PassiveTrappy, TightFoldy, HyperLag, CallingStation],
+        ),
+        (
+            "openpoker_live_meta_100bb",
+            100,
+            [PassiveTrappy, TightFoldy, HyperLag, GtoTag, LoosePassiveFish],
+        ),
         (
             "openpoker_pool_250bb",
             250,
@@ -752,12 +922,13 @@ pub fn tune_v2(iterations: usize, sessions: usize, length: usize, seed: u64) -> 
     let score_params = |p: &V2Params, s_seed: u64| -> (f64, Vec<(String, f64)>) {
         // Focus on the 4 core orthogonal environments for fast high-signal training
         use Archetype::*;
-        let train_envs: [(&str, Chips, [Archetype; 5], f64); 5] = [
-            ("openpoker_pool_250bb", 250, [LagShark, GtoTag, FitOrFold, LoosePassiveFish, CallingStation], 0.30),
-            ("openpoker_pool_50bb", 50, [LagShark, GtoTag, FitOrFold, LoosePassiveFish, CallingStation], 0.15),
-            ("tough_regs_250bb", 250, [LagShark, GtoTag, LagShark, GtoTag, NitReg], 0.25),
-            ("mixed_bots_250bb", 250, [LagShark, PotOddsBot, FitOrFold, CallingStation, Maniac], 0.15),
-            ("vs_profile28_250bb", 250, [Profile28, Profile28, Profile28, Profile28, Profile28], 0.15),
+        let train_envs: [(&str, Chips, [Archetype; 5], f64); 6] = [
+            ("openpoker_live_meta_250bb", 250, [PassiveTrappy, PassiveTrappy, TightFoldy, HyperLag, CallingStation], 0.25),
+            ("openpoker_pool_250bb", 250, [LagShark, GtoTag, FitOrFold, LoosePassiveFish, CallingStation], 0.20),
+            ("openpoker_pool_50bb", 50, [LagShark, GtoTag, FitOrFold, LoosePassiveFish, CallingStation], 0.10),
+            ("tough_regs_250bb", 250, [LagShark, GtoTag, LagShark, GtoTag, NitReg], 0.20),
+            ("mixed_bots_250bb", 250, [LagShark, PotOddsBot, FitOrFold, CallingStation, Maniac], 0.13),
+            ("vs_profile28_250bb", 250, [Profile28, Profile28, Profile28, Profile28, Profile28], 0.12),
         ];
         let mut obj = 0.0;
         let mut breakdown = Vec::new();
@@ -918,7 +1089,7 @@ pub fn debug_hands(field_idx: usize, seed: u64, hands: usize) -> Value {
                 Some(hero),
                 i,
             );
-            meta.record_action(i, h.street, a, &v);
+            meta.record_action(i, h.street, a, &v, h.active().count());
             assert!(h.apply(a));
         }
         let reached_sd = h.active().count() >= 2 && h.street == 3;

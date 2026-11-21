@@ -25,23 +25,24 @@ pub struct OppHud {
 }
 
 impl OppHud {
-    /// Prior representing a typical OpenPoker public 6-max player (empirically ~32% VPIP, 17% PFR, 3.5% 3-bet).
+    /// Prior calibrated to real OpenPoker public 6-max pool (3,854-hand empirical trace:
+    /// ~30% VPIP, ~16% PFR, ~3.8% 3-bet, ~27-30% cbet/bet-when-checked-to, ~46% fold-to-bet).
     pub fn pool_prior() -> Self {
         Self {
             hands: 0.0,
-            vpip: 0.32,
-            pfr: 0.17,
+            vpip: 0.30,
+            pfr: 0.16,
             limp: 0.05,
-            three_bet: 0.04,
-            fold_to_open: 0.62,
-            fold_to_3bet: 0.54,
-            cbet_flop: 0.54,
-            fold_to_bet: 0.40,
-            call_vs_bet: 0.48,
-            raise_vs_bet: 0.12,
-            agg_freq: 0.34,
-            river_agg: 0.28,
-            wtsd: 0.32,
+            three_bet: 0.038,
+            fold_to_open: 0.59,
+            fold_to_3bet: 0.53,
+            cbet_flop: 0.30,
+            fold_to_bet: 0.46,
+            call_vs_bet: 0.41,
+            raise_vs_bet: 0.13,
+            agg_freq: 0.28,
+            river_agg: 0.25,
+            wtsd: 0.31,
             confidence: 0.0,
         }
     }

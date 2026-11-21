@@ -623,6 +623,9 @@ impl ComboRange {
 
     /// Bayesian update given an observed postflop action by this opponent.
     /// `action_kind`: 0=check, 1=call, 2=bet, 3=raise
+    /// `is_multiway`: true when 3+ players were active at the time of the action
+    /// `is_donk`: true when opponent led OOP into the preflop aggressor on the flop
+    #[allow(clippy::too_many_arguments)]
     pub fn update_postflop(
         &mut self,
         board: &[Card],
@@ -632,11 +635,26 @@ impl ComboRange {
         bet_to_pot: f32,
         street: usize,
         hud: &OppHud,
+        is_multiway: bool,
+        is_donk: bool,
     ) {
         let t = combo_tables();
         let sticky = hud.stickiness() as f32;
         let aggr = hud.aggression() as f32;
         let is_river = street == 3;
+        let is_turn = street == 2;
+        // Real OpenPoker opponents bet only ~27% when checked to; multiway leads, OOP donk-bets,
+        // and turn/river barrels from non-maniacs are heavily value-weighted!
+        let mw_bluff_mult = if is_multiway { 0.48 } else { 1.0 };
+        let donk_bluff_mult = if is_donk { 0.55 } else { 1.0 };
+        let street_bluff_mult = if is_river {
+            0.52
+        } else if is_turn {
+            0.72
+        } else {
+            1.0
+        };
+        let passive_bet_mult = (hud.agg_freq as f32 / 0.30).clamp(0.45, 1.55);
 
         // Precompute likelihood multiplier per bucket 0..=9
         let mult: [f32; 10] = match action_kind {
@@ -646,87 +664,113 @@ impl ComboRange {
                 [0.85, 0.80, 0.78, 0.75, 0.55, 0.52, 0.40, trap, trap * 0.85, trap * 0.8]
             }
             1 => {
-                // Call facing a bet of size `bet_to_pot`
-                let size_pen = (bet_to_pot / 0.75).clamp(0.4, 2.2);
+                // Call facing a bet of size `bet_to_pot` (true B / pot_before_bet)
+                let size_pen = (bet_to_pot / 0.70).clamp(0.40, 2.60);
                 let air_call = (0.02 + 0.22 * sticky * sticky) / size_pen;
-                let weak_call = (0.12 + 0.45 * sticky) / size_pen.sqrt();
-                let mid_call = (0.40 + 0.45 * sticky).min(0.95);
-                let draw_call = if is_river { air_call } else { 0.82 };
+                let weak_call = (0.14 + 0.45 * sticky) / size_pen.sqrt();
+                let mid_call = (0.42 + 0.42 * sticky).min(0.95);
+                let draw_call = if is_river { air_call } else { 0.84 };
                 [
-                    air_call.clamp(0.01, 0.55),
-                    (air_call * 1.8).clamp(0.02, 0.65),
+                    air_call.clamp(0.01, 0.50),
+                    (air_call * 1.7).clamp(0.02, 0.60),
                     weak_call.clamp(0.06, 0.85),
                     mid_call,
                     draw_call,
                     0.88,
                     0.92,
-                    0.65, // some two pairs raise instead of call
+                    0.65,
                     0.50,
                     0.45,
                 ]
             }
             2 => {
                 // Bet (lead / c-bet / probe / barrel)
-                let bluff_base = (0.08 + 0.42 * aggr) * if is_river { 0.65 } else { 1.0 };
+                let bluff_base = (0.04 + 0.36 * aggr)
+                    * passive_bet_mult
+                    * mw_bluff_mult
+                    * donk_bluff_mult
+                    * street_bluff_mult;
+                let weak_val: f32 = if is_multiway || is_donk || is_turn || is_river {
+                    0.55
+                } else {
+                    1.0
+                };
                 if bet_to_pot <= 0.45 {
-                    // Small bet: wide merged range
+                    // Small bet: merged value + some bluffs
                     [
-                        bluff_base * 1.15,
-                        bluff_base * 1.30,
-                        0.32,
-                        0.45,
-                        if is_river { bluff_base } else { 0.72 },
+                        (bluff_base * 1.05).clamp(0.02, 0.42),
+                        (bluff_base * 1.20).clamp(0.03, 0.48),
+                        (0.28 * weak_val).max(0.08),
+                        (0.42 * weak_val).max(0.14),
+                        if is_river { bluff_base.clamp(0.02, 0.35) } else { 0.72 },
                         0.82,
-                        0.90,
-                        0.85,
-                        0.80,
-                        0.72,
+                        0.92,
+                        0.88,
+                        0.84,
+                        0.76,
                     ]
                 } else if bet_to_pot <= 0.90 {
-                    // Medium-large bet: value + semi-bluffs
+                    // Medium-large bet: value-heavy + semi-bluffs
                     [
-                        bluff_base * 0.65,
-                        bluff_base * 0.80,
-                        0.14,
-                        0.26,
-                        if is_river { bluff_base * 0.7 } else { 0.80 },
+                        (bluff_base * 0.55).clamp(0.015, 0.30),
+                        (bluff_base * 0.68).clamp(0.02, 0.34),
+                        (0.12 * weak_val).max(0.04),
+                        (0.22 * weak_val).max(0.08),
+                        if is_river { (bluff_base * 0.60).clamp(0.015, 0.25) } else { 0.78 },
                         0.72,
-                        0.92,
-                        0.96,
+                        0.94,
                         0.98,
-                        0.95,
+                        1.00,
+                        0.96,
                     ]
                 } else {
-                    // Overbet (> 90% pot): strongly polarized!
+                    // Overbet (> 90% pot): strongly polarized
                     [
-                        bluff_base * 0.45,
-                        bluff_base * 0.50,
-                        0.05,
-                        0.08,
-                        if is_river { bluff_base * 0.55 } else { 0.65 },
-                        0.25,
+                        (bluff_base * 0.40).clamp(0.015, 0.26),
+                        (bluff_base * 0.45).clamp(0.015, 0.28),
+                        0.04,
+                        0.07,
+                        if is_river { (bluff_base * 0.45).clamp(0.015, 0.22) } else { 0.62 },
+                        0.22,
                         0.55,
-                        0.90,
+                        0.92,
                         1.00,
                         1.00,
                     ]
                 }
             }
             _ => {
-                // Raise / Check-raise: very strong + semi-bluffs (or maniac bluffs)
-                let r_bluff = (0.02 + 0.35 * aggr * aggr) * if is_river { 0.45 } else { 1.0 };
-                [
-                    r_bluff,
-                    r_bluff * 1.2,
-                    0.03 + 0.10 * aggr,
-                    0.05 + 0.12 * aggr,
-                    if is_river { r_bluff } else { 0.35 + 0.40 * aggr },
-                    0.12 + 0.20 * aggr,
-                    0.35 + 0.30 * aggr,
-                    0.92,
-                    1.00,
-                    1.00,
-                ]
+                // Raise / Check-raise: distinguish frequent small-raisers (Kairo/minhcasa, r2b > 18%)
+                // from normal/tight players whose raises are overwhelmingly two-pair+ / sets!
+                let high_r2b = hud.raise_vs_bet > 0.18 && bet_to_pot <= 0.60;
+                let r_bluff = (0.015 + 0.30 * aggr * aggr) * mw_bluff_mult * street_bluff_mult;
+                if high_r2b {
+                    [
+                        (r_bluff * 1.4).clamp(0.02, 0.25),
+                        (r_bluff * 1.6).clamp(0.02, 0.28),
+                        0.08,
+                        0.16,
+                        if is_river { r_bluff } else { 0.55 + 0.25 * aggr },
+                        0.45,
+                        0.72,
+                        0.95,
+                        1.00,
+                        1.00,
+                    ]
+                } else {
+                    [
+                        r_bluff,
+                        r_bluff * 1.2,
+                        0.02 + 0.08 * aggr,
+                        0.04 + 0.10 * aggr,
+                        if is_river { r_bluff } else { 0.32 + 0.36 * aggr },
+                        0.10 + 0.18 * aggr,
+                        0.32 + 0.28 * aggr,
+                        0.92,
+                        1.00,
+                        1.00,
+                    ]
+                }
             }
         };
 

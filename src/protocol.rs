@@ -86,7 +86,11 @@ pub struct State {
     street_aggressor: Option<usize>,
     checked_street: [bool; 6],
     pf_line: [PreflopLine; 6],
-    post_actions: [Vec<(usize, u8, f32)>; 6],
+    /// `(street, action_kind, bet_to_pot, is_multiway, is_donk)`
+    post_actions: [Vec<(usize, u8, f32, bool, bool)>; 6],
+    /// Number of distinct postflop streets on which seat `i` bet or raised.
+    post_barrels: [u8; 6],
+    barreled_this_street: [bool; 6],
     hole: Option<[Card; 2]>,
     board: Option<Vec<Card>>,
 }
@@ -124,6 +128,8 @@ impl State {
             self.checked_street = [false; 6];
             self.pf_line = [PreflopLine::Unacted; 6];
             self.post_actions = Default::default();
+            self.post_barrels = [0; 6];
+            self.barreled_this_street = [false; 6];
             for s in &mut self.seats {
                 s.bet = 0;
                 s.folded = false;
@@ -143,6 +149,7 @@ impl State {
                 self.street_raises = 0;
                 self.street_aggressor = None;
                 self.checked_street = [false; 6];
+                self.barreled_this_street = [false; 6];
                 for s in &mut self.seats {
                     s.bet = 0;
                 }
@@ -310,28 +317,72 @@ impl State {
                         }
                     } else {
                         let pot_f = pot_b.max(1) as f32;
+                        let pot_before_bet_f = pot_b.saturating_sub(owing).max(1) as f32;
+                        let active_cnt = self
+                            .seats
+                            .iter()
+                            .filter(|s| s.active && !s.folded)
+                            .count();
+                        let is_mw = active_cnt >= 3;
+                        let is_donk = act_street == 1
+                            && self.street_raises == 0
+                            && self.pf_raises >= 1
+                            && self.pfa_seat.is_some_and(|p| p != i);
                         match act_str {
                             "check" => {
                                 self.checked_street[i] = true;
-                                self.post_actions[i].push((act_street, 0, 0.0));
+                                self.post_actions[i].push((act_street, 0, 0.0, is_mw, false));
                             }
                             "call" => {
-                                self.post_actions[i].push((act_street, 1, owing as f32 / pot_f));
+                                self.post_actions[i].push((
+                                    act_street,
+                                    1,
+                                    owing as f32 / pot_before_bet_f,
+                                    is_mw,
+                                    false,
+                                ));
                             }
                             "raise" => {
                                 let k = if self.street_raises == 0 { 2 } else { 3 };
                                 self.street_raises = self.street_raises.saturating_add(1);
                                 self.street_aggressor = Some(i);
-                                self.post_actions[i].push((act_street, k, delta as f32 / pot_f));
+                                if !self.barreled_this_street[i] {
+                                    self.barreled_this_street[i] = true;
+                                    self.post_barrels[i] = self.post_barrels[i].saturating_add(1);
+                                }
+                                self.post_actions[i].push((
+                                    act_street,
+                                    k,
+                                    delta as f32 / pot_f,
+                                    is_mw,
+                                    k == 2 && is_donk,
+                                ));
                             }
                             "all_in" => {
                                 if is_r {
                                     let k = if self.street_raises == 0 { 2 } else { 3 };
                                     self.street_raises = self.street_raises.saturating_add(1);
                                     self.street_aggressor = Some(i);
-                                    self.post_actions[i].push((act_street, k, delta as f32 / pot_f));
+                                    if !self.barreled_this_street[i] {
+                                        self.barreled_this_street[i] = true;
+                                        self.post_barrels[i] =
+                                            self.post_barrels[i].saturating_add(1);
+                                    }
+                                    self.post_actions[i].push((
+                                        act_street,
+                                        k,
+                                        delta as f32 / pot_f,
+                                        is_mw,
+                                        k == 2 && is_donk,
+                                    ));
                                 } else {
-                                    self.post_actions[i].push((act_street, 1, delta as f32 / pot_f));
+                                    self.post_actions[i].push((
+                                        act_street,
+                                        1,
+                                        delta as f32 / pot_before_bet_f,
+                                        is_mw,
+                                        false,
+                                    ));
                                 }
                             }
                             _ => (),
@@ -564,14 +615,24 @@ impl State {
             }
             let mut range = ComboRange::from_preflop(j_pos, pf_line, &j_hud, dead);
             if !v.board.is_empty() {
-                for &(st, kind, ratio) in &self.post_actions[j] {
+                for &(st, kind, ratio, is_mw, is_donk) in &self.post_actions[j] {
                     let (b_slice, bi) = match st {
                         1 if v.board.len() >= 3 => (&v.board[..3], b3_info.as_ref().unwrap()),
                         2 if v.board.len() >= 4 => (&v.board[..4], b4_info.as_ref().unwrap()),
                         3 if v.board.len() == 5 => (&v.board[..5], b5_info.as_ref().unwrap()),
                         _ => continue,
                     };
-                    range.update_postflop(b_slice, mask(b_slice), bi, kind, ratio, st, &j_hud);
+                    range.update_postflop(
+                        b_slice,
+                        mask(b_slice),
+                        bi,
+                        kind,
+                        ratio,
+                        st,
+                        &j_hud,
+                        is_mw,
+                        is_donk,
+                    );
                 }
             }
             opponents.push(V2Opp {
@@ -584,6 +645,7 @@ impl State {
                 range,
                 is_aggressor: self.street_aggressor == Some(j),
                 is_live: self.seats[j].stack > 0,
+                barrels: self.post_barrels[j],
             });
         }
 

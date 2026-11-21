@@ -53,6 +53,7 @@ pub struct V2Opp {
     pub range: ComboRange,
     pub is_aggressor: bool,
     pub is_live: bool,
+    pub barrels: u8,
 }
 
 #[derive(Clone, Debug)]
@@ -224,8 +225,9 @@ fn preflop_v2(ctx: &V2Context, params: &V2Params, rng: &mut ChaCha8Rng) -> Decis
 
             if score >= thresh + sticky_pen {
                 // Uniform position-based sizing (no telegraphing hand strength!)
-                // Size up uniformly vs sticky tables to extract maximum value!
-                let sticky_bump = if avg_sticky > 0.58 { 0.5 } else { 0.0 };
+                // Size up uniformly vs sticky/loose tables to build larger pots with range edge.
+                let avg_vpip = ctx.opponents.iter().map(|o| o.hud.vpip).sum::<f64>() / n_opp as f64;
+                let sticky_bump = if avg_sticky > 0.54 || avg_vpip > 0.36 { 0.5 } else { 0.0 };
                 let size_bb = match ctx.pos {
                     Pos::Sb => 3.0 + sticky_bump,
                     Pos::Btn => 2.5 + sticky_bump,
@@ -250,7 +252,7 @@ fn preflop_v2(ctx: &V2Context, params: &V2Params, rng: &mut ChaCha8Rng) -> Decis
             let iso_width = if ctx.pos.is_late() { 0.28 } else { 0.19 } * params.open_width_scale;
             let iso_thresh = score_cutoff_for_width(iso_width);
             if score >= iso_thresh || (pair && hi >= 7) {
-                let iso_bb = 3.2 + ctx.limpers as f64 * 1.0 + if ctx.pos.is_blind() { 0.8 } else { 0.0 };
+                let iso_bb = 3.5 + ctx.limpers as f64 * 1.0 + if ctx.pos.is_blind() { 0.8 } else { 0.0 };
                 if let Some(a) = clamp_raise(l, (iso_bb * bb) as Chips) {
                     action = a;
                     reason = "v2_pf_iso";
@@ -273,7 +275,7 @@ fn preflop_v2(ctx: &V2Context, params: &V2Params, rng: &mut ChaCha8Rng) -> Decis
         let r_hud = raiser.map(|o| o.hud).unwrap_or_else(OppHud::pool_prior);
         let r_pos = raiser.map(|o| o.pos).unwrap_or(Pos::Hj);
         let r_maniac = r_hud.pfr >= 0.34 || (r_hud.vpip >= 0.55 && r_hud.pfr >= 0.26);
-        let r_loose = r_maniac || r_hud.pfr > 0.21 || matches!(r_pos, Pos::Co | Pos::Btn | Pos::Sb);
+        let r_loose = r_maniac || r_hud.pfr > 0.19 || matches!(r_pos, Pos::Co | Pos::Btn | Pos::Sb);
         let r_tight = !r_maniac && r_hud.pfr < 0.13 && matches!(r_pos, Pos::Utg | Pos::Hj);
         let r_station = r_hud.fold_to_3bet < 0.36 || r_hud.stickiness() > 0.62;
         let cold_callers = ctx
@@ -282,18 +284,22 @@ fn preflop_v2(ctx: &V2Context, params: &V2Params, rng: &mut ChaCha8Rng) -> Decis
             .filter(|o| o.preflop_line == PreflopLine::ColdCall)
             .count() as f64;
 
-        // 3-bet value range (linearly expands against loose/maniac/late openers -> ~6-10% total 3-bet!)
+        // 3-bet value range (linearly expands against loose/maniac/late/station openers -> ~6-8.5% total 3-bet!)
         let value_3bet = is_premium
             || (pair && hi >= 10 && (!r_tight || cost_bb <= 4.0))
-            || (suited && hi == 14 && lo >= 11)
-            || (hi == 14 && lo == 12 && (r_loose || ctx.pos.is_late() || ctx.pos.is_blind()))
-            || (suited && hi == 13 && lo == 12 && !r_tight)
+            || (pair && hi == 9 && !r_tight && cost_bb <= 4.0 && (ctx.pos.is_late() || ctx.pos.is_blind() || r_loose))
+            || (suited && hi == 14 && lo >= 10 && (!r_tight || lo >= 11))
+            || (hi == 14 && lo == 12 && (!r_tight || ctx.pos.is_late() || ctx.pos.is_blind()))
+            || (suited && hi == 13 && lo >= 11 && (!r_tight || lo == 12))
+            || (suited && hi == 12 && lo == 11 && !r_tight && (ctx.pos.is_late() || ctx.pos == Pos::Sb || r_loose))
             || (r_loose
-                && (pair && hi >= 9
+                && cost_bb <= 4.5
+                && (pair && hi >= 8
                     || (hi == 14 && lo >= 11)
-                    || (suited && hi == 14 && lo >= 10)
-                    || (suited && hi == 13 && lo >= 11)
-                    || (suited && hi == 12 && lo == 11)))
+                    || (hi == 13 && lo == 12)
+                    || (suited && hi == 14 && lo >= 9)
+                    || (suited && hi == 13 && lo >= 10)
+                    || (suited && hi == 11 && lo == 10)))
             || (r_maniac
                 && cost_bb <= 7.0
                 && (pair && hi >= 7
@@ -302,22 +308,23 @@ fn preflop_v2(ctx: &V2Context, params: &V2Params, rng: &mut ChaCha8Rng) -> Decis
                     || (suited && hi >= 12 && lo >= 10)))
             || (r_station
                 && cost_bb <= 4.5
-                && (pair && hi >= 9
-                    || (hi == 14 && lo >= 11)
-                    || (suited && hi == 13 && lo >= 10)));
+                && (pair && hi >= 8
+                    || (hi == 14 && lo >= 10)
+                    || (hi == 13 && lo == 12)
+                    || (suited && hi >= 12 && lo >= 10)));
 
-        // Polarized 3-bet bluff (suited wheel aces, suited connectors, suited broadways IP/blinds)
+        // Polarized 3-bet bluff (suited wheel aces, suited connectors, suited kings IP/blinds)
         let bluff_3bet = !r_station
-            && r_hud.fold_to_3bet >= 0.42
+            && r_hud.fold_to_3bet >= 0.44
             && depth_bb >= 35.0
             && cost_bb <= 4.5
             && cold_callers <= 1.0
             && (ctx.pos.is_late() || ctx.pos == Pos::Sb || ctx.pos == Pos::Bb)
             && (is_suited_wheel
                 || (is_suited_conn && lo >= 5 && (ctx.pos.is_late() || r_loose))
-                || (suited && hi == 13 && lo >= 9 && r_loose)
-                || (suited && hi == 12 && lo == 10 && r_loose))
-            && rng.gen_bool((0.55 * params.three_bet_scale).clamp(0.15, 0.90));
+                || (suited && hi == 13 && lo >= 7 && (ctx.pos.is_late() || r_loose))
+                || (suited && hi == 12 && lo >= 9 && r_loose))
+            && rng.gen_bool((0.62 * params.three_bet_scale).clamp(0.18, 0.90));
 
         if (value_3bet || bluff_3bet) && cost_bb <= 10.0 {
             let mult = if ctx.pos.is_late() { 3.0 } else { 3.5 } + 0.75 * cold_callers;
@@ -620,13 +627,10 @@ fn postflop_v2(
     let max_aggr = opp_evals.iter().map(|o| o.hud.aggression()).fold(0.0f64, f64::max);
     let avg_sticky = opp_evals.iter().map(|o| o.hud.stickiness()).sum::<f64>() / n_opp as f64;
 
-    // Identify the bettor/raiser HUD if facing a bet
-    let aggr_hud = ctx
-        .opponents
-        .iter()
-        .find(|o| o.is_aggressor)
-        .map(|o| o.hud)
-        .unwrap_or(opp_evals[0].hud);
+    // Identify the bettor/raiser HUD & multi-street barrel count if facing a bet
+    let aggr_opp = ctx.opponents.iter().find(|o| o.is_aggressor);
+    let aggr_hud = aggr_opp.map(|o| o.hud).unwrap_or(opp_evals[0].hud);
+    let aggr_barrels = aggr_opp.map(|o| o.barrels).unwrap_or(1);
 
     // === 1. PASSIVE ACTION EV (FOLD / CHECK / CALL) ===
     let mut best_actions: Vec<(Action, f64, &'static str)> = Vec::with_capacity(10);
@@ -652,9 +656,11 @@ fn postflop_v2(
             } else if draw_outs >= 7.5 {
                 1.02
             } else if hero_info.bucket >= 5 {
-                0.98
+                0.97
+            } else if hero_info.bucket >= 3 {
+                0.88
             } else {
-                0.90
+                0.82
             };
             let eq_realized = (mw_eq * base_eqr * hand_eqr).clamp(0.0, 1.0);
 
@@ -664,7 +670,7 @@ fn postflop_v2(
                 let stick_mult = 0.7 + 0.9 * avg_sticky;
                 let rem_eff = (eff - call_f).max(0.0).min(pot * 2.5);
                 if draw_outs >= 7.0 {
-                    rem_eff * params.draw_implied_scale * draw_factor * stick_mult * if street == 1 { 1.0 } else { 0.6 }
+                    rem_eff * params.draw_implied_scale * draw_factor * stick_mult * if street == 1 { 1.0 } else { 0.55 }
                 } else if hero_info.bucket >= 7 {
                     rem_eff * 0.10 * stick_mult
                 } else {
@@ -674,16 +680,56 @@ fn postflop_v2(
                 0.0
             };
 
-            // Reverse implied odds & raise-respect penalty:
-            // On OpenPoker, postflop raises / huge river bets from non-maniacs are heavily value-weighted!
+            // Reverse implied odds & value-heavy bet/barrel/raise respect:
+            // On OpenPoker, opponents bet only ~27% when checked to; multi-street barrels,
+            // multiway leads, and postflop raises from non-maniacs are heavily value-weighted!
+            let pot_before_bet = (pot - call_f).max(1.0);
+            let opp_b2p = call_f / pot_before_bet;
+            let passive_factor = (1.0 - aggr_hud.aggression()).clamp(0.15, 0.95);
             let mut rio = 0.0;
             if ctx.street_raises >= 2 && hero_info.bucket <= 6 && !hero_info.is_nuts {
-                let passive_factor = (1.0 - aggr_hud.aggression()).clamp(0.15, 0.95);
-                let one_pair_vuln = if hero_info.bucket <= 4 { 1.35 } else if hero_info.bucket == 5 { 1.0 } else { 0.65 };
-                rio += call_f * params.raise_respect_rio * passive_factor * one_pair_vuln * if is_river { 1.35 } else { 1.0 };
+                // Distinguish frequent small-raisers (Kairo/minhcasa, r2b > 18%) from true value raisers
+                let min_raise_disc = if aggr_hud.raise_vs_bet > 0.18 && opp_b2p <= 0.55 {
+                    0.50
+                } else {
+                    1.0
+                };
+                let one_pair_vuln = if hero_info.bucket <= 4 {
+                    1.35
+                } else if hero_info.bucket == 5 {
+                    1.0
+                } else {
+                    0.65
+                };
+                rio += call_f
+                    * params.raise_respect_rio
+                    * passive_factor
+                    * one_pair_vuln
+                    * min_raise_disc
+                    * if is_river { 1.35 } else { 1.0 };
+            } else if ctx.street_raises == 1 && !hero_info.is_nuts && draw_outs < 7.5 {
+                // Respect multi-street barrels & multiway bets from non-maniacs with one-pair or worse
+                let non_maniac = aggr_hud.aggression() < 0.48;
+                if non_maniac {
+                    if aggr_barrels >= 2 && hero_info.bucket <= 5 && opp_b2p >= 0.45 {
+                        let barrel_scale = if aggr_barrels >= 3 { 1.35 } else { 0.85 };
+                        let vuln = if hero_info.bucket <= 3 { 1.25 } else { 0.85 };
+                        rio += call_f * params.raise_respect_rio * passive_factor * barrel_scale * vuln;
+                    } else if n_opp >= 2 && hero_info.bucket <= 4 && opp_b2p >= 0.45 {
+                        rio += call_f * params.raise_respect_rio * passive_factor * 0.70;
+                    }
+                    // Tight/passive player betting turn/river on scary board vs weak pair
+                    if street >= 2
+                        && aggr_hud.agg_freq < 0.25
+                        && hero_info.bucket <= 4
+                        && opp_b2p >= 0.50
+                    {
+                        rio += call_f * 0.08;
+                    }
+                }
             }
-            if is_river && call_f > pot * 0.85 && hero_info.bucket <= 5 && aggr_hud.river_agg < 0.32 {
-                rio += call_f * 0.10;
+            if is_river && opp_b2p > 0.90 && hero_info.bucket <= 5 && aggr_hud.river_agg < 0.32 {
+                rio += call_f * 0.12;
             }
             if hero_info.board_plays && !hero_info.is_nuts {
                 // Calling with board-only pair/high card is almost always losing or chopping
@@ -715,7 +761,7 @@ fn postflop_v2(
         } else if draw_outs >= 7.0 {
             0.98
         } else {
-            0.84
+            0.86
         };
         // Trap bonus: slowplay monsters ONLY on dry boards vs hyper-aggressive maniacs (NEVER vs stations!)
         let trap_bonus = if !is_river
@@ -729,19 +775,25 @@ fn postflop_v2(
         } else {
             0.0
         };
-        // Gentle check-to-PFA bonus ONLY for medium OOP hands vs aggressive high-cbet regs
-        let pfa_high_cbet = ctx
-            .opponents
-            .iter()
-            .any(|o| o.hud.cbet_flop > 0.56 && o.hud.stickiness() < 0.55);
+        // Checking OOP to the preflop aggressor on the flop preserves range equity and avoids
+        // spewing chips with weak/medium donk-bets into uncapped PFA ranges!
         let check_to_pfa_bonus = if street == 1
             && !ctx.hero_was_pfa
             && !ctx.in_position
             && ctx.preflop_raises >= 1
             && hero_info.bucket <= 5
-            && pfa_high_cbet
         {
-            pot * 0.06
+            let pfa_high_cbet = ctx
+                .opponents
+                .iter()
+                .any(|o| o.hud.cbet_flop > 0.48 && o.hud.stickiness() < 0.55);
+            if pfa_high_cbet {
+                pot * 0.10
+            } else if hero_info.bucket <= 4 {
+                pot * 0.065
+            } else {
+                pot * 0.03
+            }
         } else {
             0.0
         };
@@ -753,6 +805,11 @@ fn postflop_v2(
     // === 2. AGGRESSIVE CANDIDATE ACTIONS (BET / RAISE / ALL-IN) ===
     // Only consider betting/raising if legal and opponents have chips to win/fold
     let has_live_opp = ctx.opponents.iter().any(|o| o.is_live);
+    let is_oop_donk_spot = street == 1
+        && call == 0
+        && !ctx.hero_was_pfa
+        && !ctx.in_position
+        && ctx.preflop_raises >= 1;
     if has_live_opp && (l.raise.is_some() || l.jam.is_some()) {
         let mut candidates: Vec<(Action, Chips, &'static str)> = Vec::with_capacity(6);
         let mut push_size = |target: Chips, tag: &'static str| {
@@ -781,7 +838,7 @@ fn postflop_v2(
         let any_station = ctx
             .opponents
             .iter()
-            .any(|o| o.hud.fold_to_bet < 0.30 && o.hud.confidence > 0.30);
+            .any(|o| o.hud.fold_to_bet < 0.32 && o.hud.confidence > 0.25);
         if call == 0 {
             let streets_left = (4 - street) as f64;
             let geo_frac = (((2.0 * spr + 1.0).powf(1.0 / streets_left) - 1.0) * 0.5).clamp(0.45, 1.55);
@@ -796,7 +853,7 @@ fn postflop_v2(
                         push_size(ctx.bet.saturating_add(add), tag);
                     }
                 }
-                if (any_station && hero_info.bucket >= 6) || hero_info.bucket >= 8 {
+                if (any_station && hero_info.bucket >= 6) || (hero_info.bucket >= 8 && board_info.max_suit_count < 3) {
                     for &(frac, tag) in &[(1.25, "v2_bet_over"), (1.75, "v2_bet_bomb")] {
                         let add = (frac * pot).round() as Chips;
                         if add > 0 && (add as f64) <= eff * 0.92 {
@@ -825,11 +882,11 @@ fn postflop_v2(
                 }
             } else {
                 for &(frac, tag) in &[
-                    (0.33, "v2_bet_small"),
-                    (0.60, "v2_bet_med"),
-                    (0.90, "v2_bet_large"),
-                    (1.35, "v2_bet_over"),
-                    (1.85, "v2_bet_bomb"),
+                    (0.28, "v2_bet_small"),
+                    (0.55, "v2_bet_med"),
+                    (0.85, "v2_bet_large"),
+                    (1.30, "v2_bet_over"),
+                    (1.80, "v2_bet_bomb"),
                 ] {
                     let add = (frac * pot).round() as Chips;
                     if add > 0 && (add as f64) <= eff * 0.92 {
@@ -837,8 +894,8 @@ fn postflop_v2(
                     }
                 }
             }
-            if spr <= 1.9
-                || (is_river && hero_info.is_nuts && spr <= 4.5)
+            if spr <= 1.25
+                || (is_river && (spr <= 1.9 || (hero_info.is_nuts && spr <= 4.5)))
                 || (any_station && hero_info.bucket >= 8 && spr <= 3.5)
             {
                 if let Some(j) = l.jam {
@@ -881,7 +938,7 @@ fn postflop_v2(
                         push_size(ctx.bet.saturating_add(add), tag);
                     }
                 }
-                if spr <= 2.0
+                if spr <= 1.8
                     || (is_river && hero_info.is_nuts && spr <= 4.5)
                     || (ctx.street_raises >= 2 && (hero_info.is_nuts || hero_info.bucket >= 8 && spr <= 3.5))
                 {
@@ -894,8 +951,11 @@ fn postflop_v2(
             }
         }
 
-        // PFA range-advantage & IP probe bonus on flop/turn c-bets!
-        let pfa_fold_bonus = if call == 0 && n_opp <= 2 {
+        // PFA range-advantage & IP probe bonus on flop/turn c-bets,
+        // and OOP donk-bet fold-equity penalty (PFA rarely folds overcards/pairs to OOP donks!)
+        let pfa_fold_bonus = if is_oop_donk_spot {
+            -0.08
+        } else if call == 0 && n_opp <= 2 {
             if street == 1 && ctx.hero_was_pfa && board_info.wetness < 0.55 {
                 params.cbet_pfa_bonus * if board_info.top_rank >= 11 { 1.25 } else { 0.85 }
             } else if ctx.in_position && street <= 2 && board_info.wetness < 0.45 {
@@ -977,15 +1037,29 @@ fn postflop_v2(
                 0.15
             };
 
-            // Guard against suicidal bluffs: discount fold equity slightly when bluffing with low equity
-            let is_bluff = eq_vs_call < 0.34 && draw_outs < 7.0;
+            // Guard against suicidal bluffs: discount fold equity when bluffing with low equity,
+            // especially multiway or donk-betting OOP into the preflop aggressor!
+            let is_bluff = eq_vs_call < 0.36 && draw_outs < 7.0;
             let eff_p_fold = if is_bluff {
-                // Extra penalty on overbet/raise bluffs with zero blockers or multiway
-                let size_disc = if bet_to_pot > 1.0 { 0.86 } else { 1.0 };
+                let size_disc = if bet_to_pot > 1.0 { 0.84 } else { 1.0 };
                 let blocker_boost = if is_river && hero_info.flush_blocker { 1.06 } else { 1.0 };
                 let raise_bluff_disc = if call > 0 { 0.78 } else { 1.0 };
-                (p_all_fold * params.bluff_fold_discount * size_disc * blocker_boost * raise_bluff_disc)
-                    .clamp(0.0, 0.92)
+                let mw_bluff_disc = if n_opp >= 3 {
+                    0.56
+                } else if n_opp == 2 {
+                    0.74
+                } else {
+                    1.0
+                };
+                let donk_bluff_disc = if is_oop_donk_spot { 0.65 } else { 1.0 };
+                (p_all_fold
+                    * params.bluff_fold_discount
+                    * size_disc
+                    * blocker_boost
+                    * raise_bluff_disc
+                    * mw_bluff_disc
+                    * donk_bluff_disc)
+                    .clamp(0.0, 0.90)
             } else {
                 p_all_fold
             };
@@ -996,33 +1070,52 @@ fn postflop_v2(
             let opp_contrib = raise_over_call + (exp_callers - 1.0) * invest;
             let pot_when_called = pot + invest + opp_contrib;
 
-            let bet_eqr = if is_river {
+            // Consistent equity realization when called (prevents weak/air hands from gaining
+            // artificial EQR by betting instead of checking!)
+            let bet_pos_eqr = if is_river {
                 1.0
             } else if ctx.in_position {
-                1.02
+                1.01
             } else {
-                0.94
+                0.92
             };
+            let bet_hand_eqr = if is_river {
+                1.0
+            } else if hero_info.bucket >= 6 {
+                1.02
+            } else if hero_info.bucket >= 4 || draw_outs >= 7.0 {
+                0.98
+            } else {
+                0.86
+            };
+            let bet_mw_eqr = if is_river {
+                1.0
+            } else {
+                0.96f64.powf((exp_callers - 1.0).max(0.0))
+            };
+            let bet_eqr = bet_pos_eqr * bet_hand_eqr * bet_mw_eqr;
+
             let mut future_val = 0.0;
             if !is_river && spr > 1.0 {
-                let rem = (eff - invest).max(0.0).min(pot_when_called * 1.6);
+                // Reward building pots for future streets with genuine strong hands without
+                // letting flop overbets dominate controlled sizing on monotone/3-bet flops
+                let rem = (eff - invest).max(0.0).min(pot * 1.9 + invest * 0.9);
                 if eq_vs_call > 0.62 {
-                    // Building the pot with a strong value hand unlocks bigger turn/river value bets!
                     let station_extra = 1.0 + params.station_value_boost * (avg_sticky - 0.45).max(0.0) * 3.0;
                     future_val += rem * params.value_future_bonus * (eq_vs_call - 0.52) * station_extra;
                 } else if draw_outs >= 7.5 {
-                    // Semi-bluffing draws gains fold equity on next street + implied odds when hitting
                     future_val += rem * 0.06 * (draw_outs / 9.0);
                 }
             }
-            // Extra protection value on wet boards when holding strong one-pair/two-pair
+            // Extra protection value on wet (non-monotone) boards when holding vulnerable strong pairs
             let protection = if !is_river
                 && call == 0
                 && hero_info.bucket >= 5
                 && hero_info.bucket <= 7
                 && board_info.wetness > 0.25
+                && board_info.max_suit_count < 3
             {
-                pot * 0.05 * board_info.wetness as f64
+                pot * 0.045 * board_info.wetness as f64
             } else {
                 0.0
             };
@@ -1045,6 +1138,16 @@ fn postflop_v2(
             let mut ev_bet =
                 eff_p_fold * pot + eff_p_called * ev_if_called + p_any_raise * ev_if_raised;
 
+            // On monotone flops or 3-bet flops where hero has range advantage, avoid needlessly
+            // folding out villain's medium hands with huge 80%+ flop bombs when not facing a station
+            if street == 1
+                && call == 0
+                && bet_to_pot > 0.65
+                && !any_station
+                && (board_info.max_suit_count >= 3 || (ctx.preflop_raises >= 2 && hero_info.bucket <= 7))
+            {
+                ev_bet -= pot * 0.04;
+            }
             // Hard safety guardrail: never punt huge overbet/jam bluffs (>1.1x pot) with pure air on river
             // unless we actually have strong blockers & opponent folds frequently
             if is_bluff && is_river && bet_to_pot > 1.10 && (!hero_info.flush_blocker || avg_sticky > 0.52) {
@@ -1144,6 +1247,7 @@ mod tests {
                 range: opp_r,
                 is_aggressor: true,
                 is_live: true,
+                barrels: 0,
             }],
         };
         let d = decide_v2(&ctx, 7, 256);
@@ -1187,6 +1291,7 @@ mod tests {
                 range: opp_r2,
                 is_aggressor: false,
                 is_live: true,
+                barrels: 0,
             }],
         };
         let d2 = decide_v2(&ctx2, 9, 384);
@@ -1227,6 +1332,7 @@ mod tests {
                 ),
                 is_aggressor: i == 0,
                 is_live: true,
+                barrels: 0,
             })
             .collect();
         let ctx = V2Context {
@@ -1256,5 +1362,108 @@ mod tests {
         };
         let d = decide_v2(&ctx, 21, 256);
         assert_eq!(d.action, Action::Check, "22 on A99 5-way must check, got {d:?}");
+    }
+
+    #[test]
+    fn v2_live_leak_regressions_oop_donk_and_barrel_fold() {
+        let c = |s| Card::parse(s).unwrap();
+        let hud = OppHud::pool_prior();
+        // Hand 7fe2c88e regression: Tc 2c in BB on Jd Kc Td vs UTG open — MUST CHECK, never donk bottom pair!
+        let hole = [c("Tc"), c("2c")];
+        let board = vec![c("Jd"), c("Kc"), c("Td")];
+        let dead = mask(&hole) | mask(&board);
+        let opp_r = ComboRange::from_preflop(Pos::Utg, PreflopLine::OpenRaise, &hud, dead);
+        let ctx = V2Context {
+            hole,
+            board,
+            bb: 20,
+            pot: 90,
+            bet: 0,
+            stack: 1952,
+            effective: 1934,
+            legal: Legal {
+                fold: true,
+                check: true,
+                call: None,
+                raise: Some((20, 1952)),
+                jam: Some(1952),
+            },
+            pos: Pos::Bb,
+            in_position: false,
+            actors_behind: 1,
+            preflop_raises: 1,
+            limpers: 0,
+            hero_was_pfa: false,
+            street_raises: 0,
+            facing_check_raise: false,
+            opponents: vec![V2Opp {
+                seat: 1,
+                pos: Pos::Utg,
+                stack: 1934,
+                bet: 0,
+                preflop_line: PreflopLine::OpenRaise,
+                hud,
+                range: opp_r,
+                is_aggressor: false,
+                is_live: true,
+                barrels: 0,
+            }],
+        };
+        let d = decide_v2(&ctx, 11, 384);
+        assert_eq!(d.action, Action::Check, "Tc2c OOP on JKT vs UTG must check, got {d:?}");
+
+        // Hand 2f672b64 regression: Ac 4s on 7c 5s As Kd facing tight BB multiway donk + 65% turn barrel — MUST FOLD!
+        let mut tight_hud = OppHud::pool_prior();
+        tight_hud.vpip = 0.17;
+        tight_hud.agg_freq = 0.22;
+        tight_hud.hands = 40.0;
+        tight_hud.confidence = 0.62;
+        let hole2 = [c("Ac"), c("4s")];
+        let b_flop = vec![c("7c"), c("5s"), c("As")];
+        let b_turn = vec![c("7c"), c("5s"), c("As"), c("Kd")];
+        let dead2 = mask(&hole2) | mask(&b_turn);
+        let mut r2 = ComboRange::from_preflop(Pos::Bb, PreflopLine::ColdCall, &tight_hud, dead2);
+        let bi3 = BoardFast::analyze(&b_flop);
+        let bi4 = BoardFast::analyze(&b_turn);
+        r2.update_postflop(&b_flop, mask(&b_flop), &bi3, 2, 0.65, 1, &tight_hud, true, true);
+        r2.update_postflop(&b_turn, mask(&b_turn), &bi4, 2, 0.65, 2, &tight_hud, false, false);
+        let ctx2 = V2Context {
+            hole: hole2,
+            board: b_turn,
+            bb: 20,
+            pot: 571,
+            bet: 0,
+            stack: 1456,
+            effective: 1456,
+            legal: Legal {
+                fold: true,
+                check: false,
+                call: Some(225),
+                raise: Some((450, 1456)),
+                jam: Some(1456),
+            },
+            pos: Pos::Btn,
+            in_position: true,
+            actors_behind: 0,
+            preflop_raises: 1,
+            limpers: 0,
+            hero_was_pfa: true,
+            street_raises: 1,
+            facing_check_raise: false,
+            opponents: vec![V2Opp {
+                seat: 2,
+                pos: Pos::Bb,
+                stack: 1456,
+                bet: 225,
+                preflop_line: PreflopLine::ColdCall,
+                hud: tight_hud,
+                range: r2,
+                is_aggressor: true,
+                is_live: true,
+                barrels: 2,
+            }],
+        };
+        let d2 = decide_v2(&ctx2, 19, 384);
+        assert_eq!(d2.action, Action::Fold, "A4o facing tight BB multiway donk + turn barrel must fold, got {d2:?}");
     }
 }
