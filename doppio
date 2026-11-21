@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root=$(cd -- "$(dirname -- "$0")" && pwd)
+if [[ ! -f "$root/engine/Cargo.toml" ]]; then
+  echo 'Doppio is not checked out. Run: git submodule update --init --recursive' >&2
+  exit 1
+fi
+
+if [[ ${1:-} == play ]]; then
+  umask 077
+  if [[ -n ${OPENPOKER_KEY_FILE:-} && -z ${OPENPOKER_API_KEY:-} && -z ${OPEN_POKER_API_KEY:-} ]]; then
+    key=$(<"$OPENPOKER_KEY_FILE")
+    export OPENPOKER_API_KEY=${key%$'\r'}
+    [[ -n $OPENPOKER_API_KEY ]] || { echo 'Open Poker key file is empty' >&2; exit 1; }
+  fi
+fi
+
+cd -- "$root"
+export DOPPIO_V4_MODEL_DIR=${DOPPIO_V4_MODEL_DIR:-"$root/engine/models/v4"}
+exec "$root/scripts/cargo" run --quiet --locked --release --manifest-path engine/Cargo.toml \
+  --target-dir target/doppio --bin doppio -- "$@"

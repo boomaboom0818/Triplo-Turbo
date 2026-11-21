@@ -1,5 +1,9 @@
 /target/
 /runs/
+/data/
+*.db
+*.db-wal
+*.db-shm
 .env
 .env.*
 *.key
