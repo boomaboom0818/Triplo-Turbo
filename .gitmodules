@@ -1,3 +1,2 @@
-[submodule "doppio"]
+[submodule "engine"]
 	path = engine
-	url = https://github.com/mm-nair/Doppio.git
