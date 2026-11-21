@@ -267,6 +267,7 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
     let mut tick = tokio::time::interval(Duration::from_millis(100));
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
     let mut last_in = Instant::now();
+    let mut last_text = last_in;
     let mut last_ping = last_in;
     let mut syncing = false;
     let mut recovery_since = None;
@@ -293,6 +294,7 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
                     }
                     continue;
                 };
+                last_text = Instant::now();
                 let m: Value = serde_json::from_str(&text).context("invalid server JSON")?;
                 let kind = m["type"].as_str().unwrap_or("");
                 let state = &mut mem.state;
@@ -421,7 +423,8 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
                             recovery_since = Some(Instant::now());
                         }
                     }
-                    "table_closed" | "season_ended" | "rebuy_confirmed" => {
+                    "table_closed" | "season_ended" | "rebuy_confirmed" | "table_left"
+                    | "left_table" | "kicked" => {
                         job = None;
                         mem.reset_table();
                         syncing = false;
@@ -431,6 +434,15 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
                         let bal = m["chip_balance"].as_u64().unwrap_or(buy as u64);
                         let b = (buy as u64).min(bal).max(1000);
                         send(ws, json!({"type":"join_lobby","buy_in":b})).await?;
+                    }
+                    "player_left" if m["seat"].as_u64().map(|x| x as usize) == state.hero => {
+                        job = None;
+                        mem.reset_table();
+                        mem.queue_at = Some(Instant::now() + Duration::from_secs(1));
+                        syncing = false;
+                        recovery_since = None;
+                        pending_rebuy = false;
+                        log(kind, json!({}));
                     }
                     "busted" => {
                         log("busted", json!({}));
@@ -626,6 +638,9 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
                         .is_some_and(|t: Instant| t.elapsed() > Duration::from_secs(10))
                 {
                     bail!("socket or recovery timed out");
+                }
+                if !mem.state.table.is_empty() && last_text.elapsed() > Duration::from_secs(90) {
+                    bail!("table went silent; rechecking seat");
                 }
                 if last_ping.elapsed() > Duration::from_secs(25) {
                     ws.send(Message::Ping(vec![].into())).await?;
