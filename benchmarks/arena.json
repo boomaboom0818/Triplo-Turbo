@@ -1,0 +1,106 @@
+[
+  {
+    "block_95pct_ci": [
+      114.8137831322725,
+      153.86574067725067
+    ],
+    "deal_blocks": 3500,
+    "decision_p99_us": 579,
+    "decisions": 40819,
+    "elapsed_s": 1.9122364840000001,
+    "field": "baseline",
+    "hands": 21000,
+    "hero_bb_per_100": 134.3397619047616,
+    "mode": "fixed_100bb",
+    "net_positive_hands": 12908,
+    "policy_profile": 20,
+    "samples": 512,
+    "seats": 6,
+    "seed": 273077001,
+    "wins": 12913,
+    "won_pct": 61.49047619047619,
+    "won_pct_block_95pct_ci": [
+      60.43316665139436,
+      62.547785729558015
+    ],
+    "worst_hand_bb": -100.0
+  },
+  {
+    "block_95pct_ci": [
+      648.3429997171044,
+      725.8112859971806
+    ],
+    "deal_blocks": 3500,
+    "decision_p99_us": 441,
+    "decisions": 68454,
+    "elapsed_s": 2.821865882,
+    "field": "mixed",
+    "hands": 21000,
+    "hero_bb_per_100": 687.0771428571425,
+    "mode": "fixed_100bb",
+    "net_positive_hands": 5997,
+    "policy_profile": 20,
+    "samples": 512,
+    "seats": 6,
+    "seed": 273077001,
+    "wins": 5999,
+    "won_pct": 28.566666666666666,
+    "won_pct_block_95pct_ci": [
+      28.052436309054098,
+      29.080897024279235
+    ],
+    "worst_hand_bb": -100.0
+  },
+  {
+    "block_95pct_ci": [
+      1170.267665902847,
+      1311.5566198114375
+    ],
+    "deal_blocks": 3500,
+    "decision_p99_us": 516,
+    "decisions": 72194,
+    "elapsed_s": 2.204724967,
+    "field": "scripted",
+    "hands": 21000,
+    "hero_bb_per_100": 1240.9121428571423,
+    "mode": "fixed_100bb",
+    "net_positive_hands": 4164,
+    "policy_profile": 20,
+    "samples": 512,
+    "seats": 6,
+    "seed": 273077001,
+    "wins": 4170,
+    "won_pct": 19.857142857142858,
+    "won_pct_block_95pct_ci": [
+      19.42033002631487,
+      20.293955687970847
+    ],
+    "worst_hand_bb": -100.0
+  },
+  {
+    "block_95pct_ci": [
+      89.79314350607562,
+      121.33542792249581
+    ],
+    "deal_blocks": 3500,
+    "decision_p99_us": 398,
+    "decisions": 7773,
+    "elapsed_s": 0.135836954,
+    "field": "mixed",
+    "hands": 7000,
+    "hero_bb_per_100": 105.56428571428572,
+    "mode": "fixed_100bb",
+    "net_positive_hands": 6266,
+    "policy_profile": 20,
+    "samples": 512,
+    "seats": 2,
+    "seed": 273077001,
+    "wins": 6280,
+    "won_pct": 89.71428571428571,
+    "won_pct_block_95pct_ci": [
+      89.02839591788715,
+      90.40017551068426
+    ],
+    "worst_hand_bb": -100.0
+  }
+]

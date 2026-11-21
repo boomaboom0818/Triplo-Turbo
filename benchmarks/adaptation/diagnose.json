@@ -1,0 +1,139 @@
+{
+  "phase": "diagnose",
+  "frozen": "6d305df121dfc99563e28b7895dbdda822108a57712005f90bd353872b97eb10",
+  "candidate": null,
+  "fields": {
+    "reactive100": {
+      "seed": 1100000000,
+      "sessions": 120,
+      "hands_per_branch": 28800,
+      "branches": {
+        "20": {
+          "bb100": 52.291666666666664,
+          "p90_dd": 286.0,
+          "bust_session_pct": 48.333333333333336,
+          "win_pct": 47.552083333333336,
+          "events": {
+            "weak_open:foldthrough": 4448,
+            "weak_open:net_bb": -1893.5,
+            "all:foldthrough": 10023,
+            "all:net_bb": 15024.0,
+            "middle_open:foldthrough": 714,
+            "middle_open:net_bb": 2580.0,
+            "weak_reraise:foldthrough": 3879,
+            "weak_reraise:net_bb": 6330.0,
+            "weak_open:call": 6363,
+            "all:call": 8856,
+            "weak_reraise:call": 1115,
+            "middle_reraise:foldthrough": 528,
+            "middle_reraise:net_bb": 1463.0,
+            "weak_open:reraise": 2337,
+            "all:reraise": 3345,
+            "middle_open:call": 932,
+            "weak_reraise:reraise": 489,
+            "middle_reraise:call": 149,
+            "middle_open:reraise": 317,
+            "strong_open:call": 149,
+            "strong_open:net_bb": 2801.0,
+            "strong_open:foldthrough": 158,
+            "strong_reraise:call": 148,
+            "strong_reraise:net_bb": 3743.5,
+            "strong_reraise:foldthrough": 296,
+            "middle_reraise:reraise": 68,
+            "strong_open:reraise": 62,
+            "strong_reraise:reraise": 72
+          }
+        }
+      },
+      "paired": {}
+    },
+    "static100": {
+      "seed": 1103000000,
+      "sessions": 120,
+      "hands_per_branch": 28800,
+      "branches": {
+        "20": {
+          "bb100": 86.83680555555556,
+          "p90_dd": 226.15,
+          "bust_session_pct": 26.666666666666668,
+          "win_pct": 54.854166666666664,
+          "events": {
+            "weak_open:call": 6369,
+            "weak_open:net_bb": 6937.0,
+            "all:call": 8790,
+            "all:net_bb": 25770.5,
+            "weak_open:foldthrough": 5852,
+            "all:foldthrough": 11746,
+            "middle_reraise:foldthrough": 569,
+            "middle_reraise:net_bb": 1555.0,
+            "weak_reraise:reraise": 477,
+            "weak_reraise:net_bb": 7954.5,
+            "all:reraise": 2300,
+            "weak_reraise:foldthrough": 3936,
+            "middle_open:foldthrough": 869,
+            "middle_open:net_bb": 2941.5,
+            "weak_open:reraise": 1464,
+            "strong_open:foldthrough": 196,
+            "strong_open:net_bb": 2354.5,
+            "weak_reraise:call": 1104,
+            "middle_open:reraise": 228,
+            "middle_open:call": 870,
+            "strong_reraise:call": 139,
+            "strong_reraise:net_bb": 4028.0,
+            "strong_reraise:foldthrough": 324,
+            "strong_reraise:reraise": 46,
+            "middle_reraise:call": 166,
+            "strong_open:reraise": 22,
+            "strong_open:call": 142,
+            "middle_reraise:reraise": 63
+          }
+        }
+      },
+      "paired": {}
+    },
+    "mixed": {
+      "seed": 1102000000,
+      "sessions": 120,
+      "hands_per_branch": 28800,
+      "branches": {
+        "20": {
+          "bb100": 106.63194444444444,
+          "p90_dd": 243.25,
+          "bust_session_pct": 30.833333333333336,
+          "win_pct": 53.760416666666664,
+          "events": {
+            "weak_reraise:call": 1279,
+            "weak_reraise:net_bb": 9081.5,
+            "all:call": 8788,
+            "all:net_bb": 30246.5,
+            "weak_open:foldthrough": 5630,
+            "weak_open:net_bb": 8624.0,
+            "all:foldthrough": 11351,
+            "weak_open:call": 6149,
+            "strong_open:foldthrough": 186,
+            "strong_open:net_bb": 2696.5,
+            "middle_open:reraise": 187,
+            "middle_open:net_bb": 4811.0,
+            "all:reraise": 1935,
+            "middle_open:foldthrough": 816,
+            "weak_open:reraise": 1188,
+            "strong_open:call": 152,
+            "weak_reraise:foldthrough": 3821,
+            "middle_reraise:foldthrough": 574,
+            "middle_reraise:net_bb": 2206.0,
+            "strong_reraise:foldthrough": 324,
+            "strong_reraise:net_bb": 2827.5,
+            "weak_reraise:reraise": 421,
+            "middle_reraise:call": 178,
+            "strong_reraise:call": 183,
+            "strong_reraise:reraise": 63,
+            "middle_open:call": 847,
+            "middle_reraise:reraise": 50,
+            "strong_open:reraise": 26
+          }
+        }
+      },
+      "paired": {}
+    }
+  }
+}

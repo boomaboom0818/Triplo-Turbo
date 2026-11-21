@@ -1,0 +1,18 @@
+{
+  "open_width_scale": 1.0608,
+  "steal_aggression": 0.14,
+  "three_bet_scale": 1.05,
+  "bb_defend_scale": 1.1235,
+  "fold_bias": -0.0437,
+  "bluff_fold_discount": 0.86,
+  "value_future_bonus": 0.1109,
+  "ip_eqr": 1.0158,
+  "oop_eqr": 0.8586,
+  "call_ip_eqr": 0.9778,
+  "call_oop_eqr": 0.8427,
+  "raise_respect_rio": 0.132,
+  "station_value_boost": 0.08,
+  "cbet_pfa_bonus": 0.0504,
+  "draw_implied_scale": 0.1445,
+  "close_ev_mix_frac": 0.015
+}

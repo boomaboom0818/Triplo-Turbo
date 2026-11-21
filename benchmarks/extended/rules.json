@@ -1,0 +1,13 @@
+{
+  "hands": 12000,
+  "seed": 944170000,
+  "pokerkit": "0.7.7",
+  "counters": {
+    "decision_points": 92005,
+    "off_menu_raises": 11712,
+    "stack_committing_raises": 9239,
+    "settlements_matched": 12000
+  },
+  "discrepancies": {},
+  "examples": []
+}

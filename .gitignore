@@ -1,0 +1,6 @@
+/target/
+/runs/
+.env
+.env.*
+*.key
+__pycache__/

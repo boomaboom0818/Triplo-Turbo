@@ -1,0 +1,19 @@
+{
+  "binary_sha256": "6d305df121dfc99563e28b7895dbdda822108a57712005f90bd353872b97eb10",
+  "seed": 92900123,
+  "boards": 3007,
+  "counts": {
+    "decisions": 9142,
+    "nut_call_tests": 6014,
+    "repeat_tests": 121
+  },
+  "violations": {},
+  "examples": [],
+  "equity_uniform_no_wager": {
+    "random_boards": 3000,
+    "samples_per_estimate": 512,
+    "bias": 3.904079861111046e-05,
+    "rmse": 0.017004384498597924,
+    "p99_absolute_error": 0.04611914062500002
+  }
+}

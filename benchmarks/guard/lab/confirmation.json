@@ -1,0 +1,338 @@
+{
+  "fields": [
+    {
+      "depth_bb": 50,
+      "field": "mixed_50",
+      "paired_deltas_bb100": {
+        "24-21": {
+          "ci95": [
+            -11.59183473946833,
+            11.93005088530167
+          ],
+          "family_ci95": [
+            -17.028270549683032,
+            17.366486695516368
+          ],
+          "mean": 0.16910807291666885
+        },
+        "24-22": {
+          "ci95": [
+            -16.095340710499798,
+            1.1255056410553541
+          ],
+          "family_ci95": [
+            -20.075464892772494,
+            5.105629823328051
+          ],
+          "mean": -7.484917534722222
+        }
+      },
+      "policies": {
+        "21": {
+          "bb100": 336.0767144097222,
+          "bust_sessions_pct": 60.416666666666664,
+          "p90_drawdown_bb": 395.15,
+          "postflop_vetoes": 0,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "22": {
+          "bb100": 343.73074001736126,
+          "bust_sessions_pct": 60.677083333333336,
+          "p90_drawdown_bb": 367.85,
+          "postflop_vetoes": 5917,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "24": {
+          "bb100": 336.24582248263897,
+          "bust_sessions_pct": 59.895833333333336,
+          "p90_drawdown_bb": 385.75,
+          "postflop_vetoes": 4776,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        }
+      },
+      "seed": 1920000000
+    },
+    {
+      "depth_bb": 50,
+      "field": "price_sensitive_50",
+      "paired_deltas_bb100": {
+        "24-21": {
+          "ci95": [
+            -0.5658047026234669,
+            19.342280397067906
+          ],
+          "family_ci95": [
+            -5.167010085358259,
+            23.9434857798027
+          ],
+          "mean": 9.38823784722222
+        },
+        "24-22": {
+          "ci95": [
+            -7.509947076572784,
+            6.750832493239454
+          ],
+          "family_ci95": [
+            -10.80593337510592,
+            10.04681879177259
+          ],
+          "mean": -0.3795572916666648
+        }
+      },
+      "policies": {
+        "21": {
+          "bb100": 411.65668402777766,
+          "bust_sessions_pct": 57.291666666666664,
+          "p90_drawdown_bb": 362.2,
+          "postflop_vetoes": 0,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "22": {
+          "bb100": 421.42447916666634,
+          "bust_sessions_pct": 52.864583333333336,
+          "p90_drawdown_bb": 345.6,
+          "postflop_vetoes": 6605,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "24": {
+          "bb100": 421.04492187500006,
+          "bust_sessions_pct": 53.90625,
+          "p90_drawdown_bb": 343.25,
+          "postflop_vetoes": 4980,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        }
+      },
+      "seed": 1930000000
+    },
+    {
+      "depth_bb": 50,
+      "field": "calling_heavy_50",
+      "paired_deltas_bb100": {
+        "24-21": {
+          "ci95": [
+            -11.804854020320494,
+            13.369524159209387
+          ],
+          "family_ci95": [
+            -17.62321795671184,
+            19.187888095600734
+          ],
+          "mean": 0.7823350694444455
+        },
+        "24-22": {
+          "ci95": [
+            6.02109542335846,
+            30.983787389141554
+          ],
+          "family_ci95": [
+            0.2516569231034893,
+            36.753225889396525
+          ],
+          "mean": 18.502441406250007
+        }
+      },
+      "policies": {
+        "21": {
+          "bb100": 1103.0818142361115,
+          "bust_sessions_pct": 38.020833333333336,
+          "p90_drawdown_bb": 438.15,
+          "postflop_vetoes": 0,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "22": {
+          "bb100": 1085.3617078993052,
+          "bust_sessions_pct": 33.333333333333336,
+          "p90_drawdown_bb": 398.5,
+          "postflop_vetoes": 14026,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "24": {
+          "bb100": 1103.8641493055559,
+          "bust_sessions_pct": 36.458333333333336,
+          "p90_drawdown_bb": 401.9,
+          "postflop_vetoes": 9041,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        }
+      },
+      "seed": 1940000000
+    },
+    {
+      "depth_bb": 100,
+      "field": "reactive_100",
+      "paired_deltas_bb100": {
+        "24-21": {
+          "ci95": [
+            -7.614587508868728,
+            16.03874115470207
+          ],
+          "family_ci95": [
+            -13.081402756112386,
+            21.50555640194573
+          ],
+          "mean": 4.2120768229166705
+        },
+        "24-22": {
+          "ci95": [
+            -1.4967009537702598,
+            16.912391057936937
+          ],
+          "family_ci95": [
+            -5.751455383006668,
+            21.167145487173347
+          ],
+          "mean": 7.707845052083339
+        }
+      },
+      "policies": {
+        "21": {
+          "bb100": 729.1539713541662,
+          "bust_sessions_pct": 33.59375,
+          "p90_drawdown_bb": 475.6,
+          "postflop_vetoes": 0,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "22": {
+          "bb100": 725.6582031250001,
+          "bust_sessions_pct": 29.427083333333332,
+          "p90_drawdown_bb": 465.9,
+          "postflop_vetoes": 7497,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "24": {
+          "bb100": 733.3660481770838,
+          "bust_sessions_pct": 31.25,
+          "p90_drawdown_bb": 462.25,
+          "postflop_vetoes": 5737,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        }
+      },
+      "seed": 1950000000
+    },
+    {
+      "depth_bb": 50,
+      "field": "value_pressure_50",
+      "paired_deltas_bb100": {
+        "24-21": {
+          "ci95": [
+            -5.244494347059705,
+            2.0373545901152568
+          ],
+          "family_ci95": [
+            -6.92749310651902,
+            3.720353349574572
+          ],
+          "mean": -1.6035698784722239
+        },
+        "24-22": {
+          "ci95": [
+            -0.6778886152568181,
+            2.381230629145707
+          ],
+          "family_ci95": [
+            -1.3849197467437282,
+            3.0882617606326175
+          ],
+          "mean": 0.8516710069444445
+        }
+      },
+      "policies": {
+        "21": {
+          "bb100": 37.42588975694441,
+          "bust_sessions_pct": 68.48958333333333,
+          "p90_drawdown_bb": 232.9,
+          "postflop_vetoes": 0,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "22": {
+          "bb100": 34.970648871527764,
+          "bust_sessions_pct": 68.75,
+          "p90_drawdown_bb": 231.95,
+          "postflop_vetoes": 2583,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "24": {
+          "bb100": 35.82231987847221,
+          "bust_sessions_pct": 68.75,
+          "p90_drawdown_bb": 232.3,
+          "postflop_vetoes": 2337,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        }
+      },
+      "seed": 1960000000
+    },
+    {
+      "depth_bb": 50,
+      "field": "value_and_reactive_50",
+      "paired_deltas_bb100": {
+        "24-21": {
+          "ci95": [
+            -0.1824661780672745,
+            14.363455761400605
+          ],
+          "family_ci95": [
+            -3.5443552793830664,
+            17.725344862716398
+          ],
+          "mean": 7.090494791666665
+        },
+        "24-22": {
+          "ci95": [
+            -0.5914164837760665,
+            8.194498080998288
+          ],
+          "family_ci95": [
+            -2.6220385745121804,
+            10.225120171734403
+          ],
+          "mean": 3.801540798611111
+        }
+      },
+      "policies": {
+        "21": {
+          "bb100": 444.45285373263897,
+          "bust_sessions_pct": 34.375,
+          "p90_drawdown_bb": 270.65,
+          "postflop_vetoes": 0,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "22": {
+          "bb100": 447.74180772569457,
+          "bust_sessions_pct": 31.25,
+          "p90_drawdown_bb": 256.45,
+          "postflop_vetoes": 8989,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        },
+        "24": {
+          "bb100": 451.5433485243057,
+          "bust_sessions_pct": 30.729166666666668,
+          "p90_drawdown_bb": 261.65,
+          "postflop_vetoes": 7167,
+          "preflop_vetoes": 0,
+          "premium_vetoes": 0
+        }
+      },
+      "seed": 1970000000
+    }
+  ],
+  "hands_per_session": 240,
+  "sessions_per_field": 384,
+  "candidate": 24,
+  "binary_sha256": "ec19e2309871e16a7b0a6a31b22d71655caf0d59544e15b0e3c68ff7c713dab2"
+}

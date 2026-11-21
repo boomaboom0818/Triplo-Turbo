@@ -1,0 +1,92 @@
+[
+  {
+    "checkpoint": "runs/bot/pressure-fresh-001/base-guard.json",
+    "fallback": "equity-guarded-v3",
+    "opponents": "5 x trained reference (no persistent stats)",
+    "profile": 20,
+    "hands": 21000,
+    "deal_blocks": 3500,
+    "seed": 190250001,
+    "stack_bb": "50",
+    "won_pct": 63.57142857142857,
+    "won_pct_block_95pct_ci": [
+      62.50738767163989,
+      64.63546947121725
+    ],
+    "bb_per_100": 93.80714285714286,
+    "bb_per_100_block_95pct_ci": [
+      83.26832858381792,
+      104.34595713046781
+    ],
+    "control_bb_per_100": 0.0,
+    "control_bb_per_100_block_95pct_ci": [
+      0.0,
+      0.0
+    ],
+    "paired_delta_bb_per_100": 93.80714285714286,
+    "paired_delta_bb_per_100_block_95pct_ci": [
+      83.26832858381792,
+      104.34595713046781
+    ]
+  },
+  {
+    "checkpoint": "runs/bot/pressure-fresh-001/base-guard.json",
+    "fallback": "equity-guarded-v3",
+    "opponents": "5 x trained reference (no persistent stats)",
+    "profile": 20,
+    "hands": 21000,
+    "deal_blocks": 3500,
+    "seed": 190250001,
+    "stack_bb": "100",
+    "won_pct": 60.93333333333334,
+    "won_pct_block_95pct_ci": [
+      59.841383799060345,
+      62.02528286760633
+    ],
+    "bb_per_100": 83.63333333333334,
+    "bb_per_100_block_95pct_ci": [
+      70.63047945344404,
+      96.63618721322264
+    ],
+    "control_bb_per_100": 0.0,
+    "control_bb_per_100_block_95pct_ci": [
+      0.0,
+      0.0
+    ],
+    "paired_delta_bb_per_100": 83.63333333333334,
+    "paired_delta_bb_per_100_block_95pct_ci": [
+      70.63047945344404,
+      96.63618721322264
+    ]
+  },
+  {
+    "checkpoint": "runs/bot/pressure-fresh-001/base-guard.json",
+    "fallback": "equity-guarded-v3",
+    "opponents": "5 x trained reference (no persistent stats)",
+    "profile": 20,
+    "hands": 21000,
+    "deal_blocks": 3500,
+    "seed": 190250001,
+    "stack_bb": "200",
+    "won_pct": 61.32857142857143,
+    "won_pct_block_95pct_ci": [
+      60.24293883792389,
+      62.41420401921897
+    ],
+    "bb_per_100": 100.17619047619047,
+    "bb_per_100_block_95pct_ci": [
+      82.85565970443766,
+      117.49672124794328
+    ],
+    "control_bb_per_100": 0.0,
+    "control_bb_per_100_block_95pct_ci": [
+      0.0,
+      0.0
+    ],
+    "paired_delta_bb_per_100": 100.17619047619047,
+    "paired_delta_bb_per_100_block_95pct_ci": [
+      82.85565970443766,
+      117.49672124794328
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "checkpoint": "runs/bot/history-sustained-001/checkpoint.json",
+    "fallback": "equity-v1",
+    "opponents": "5 x trained reference (no persistent stats)",
+    "profile": 20,
+    "hands": 15000,
+    "deal_blocks": 2500,
+    "seed": 213134001,
+    "stack_bb": "100",
+    "won_pct": 57.38,
+    "won_pct_block_95pct_ci": [
+      56.029188802292545,
+      58.73081119770746
+    ],
+    "bb_per_100": 46.79666666666667,
+    "bb_per_100_block_95pct_ci": [
+      29.423052786729357,
+      64.17028054660398
+    ],
+    "control_bb_per_100": 0.0,
+    "control_bb_per_100_block_95pct_ci": [
+      0.0,
+      0.0
+    ],
+    "paired_delta_bb_per_100": 46.79666666666667,
+    "paired_delta_bb_per_100_block_95pct_ci": [
+      29.423052786729357,
+      64.17028054660398
+    ]
+  }
+]

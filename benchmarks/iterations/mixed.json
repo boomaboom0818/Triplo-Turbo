@@ -1,0 +1,32 @@
+[
+  {
+    "checkpoint": "runs/bot/pressure-fresh-001/base-guard.json",
+    "fallback": "equity-guarded-v3",
+    "opponents": "3 x trained reference, station, aggressive; paired champion control",
+    "profile": 18,
+    "hands": 18000,
+    "deal_blocks": 3000,
+    "seed": 112900001,
+    "stack_bb": "empirical",
+    "won_pct": 78.87777777777778,
+    "won_pct_block_95pct_ci": [
+      77.96493154123321,
+      79.79062401432235
+    ],
+    "bb_per_100": -346.3777777777778,
+    "bb_per_100_block_95pct_ci": [
+      -409.48721214884057,
+      -283.268343406715
+    ],
+    "control_bb_per_100": 49.952777777777776,
+    "control_bb_per_100_block_95pct_ci": [
+      30.61422728019316,
+      69.29132827536239
+    ],
+    "paired_delta_bb_per_100": -396.3305555555556,
+    "paired_delta_bb_per_100_block_95pct_ci": [
+      -462.2723872645464,
+      -330.38872384656474
+    ]
+  }
+]

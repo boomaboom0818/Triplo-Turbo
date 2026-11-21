@@ -1,0 +1,43 @@
+{
+  "binary_sha256": "6d305df121dfc99563e28b7895dbdda822108a57712005f90bd353872b97eb10",
+  "capture_prefix_bytes": 119014408,
+  "matching_decision_counts": true,
+  "cases": [
+    {
+      "mode": "clean",
+      "source_sha256": "10087f9e60b6c0873c4551d620ed7c30e168620eda1997a8359cba5e9e43881b",
+      "events_sent": 129073,
+      "duplicated_or_late": 0,
+      "dropped_public_actions": 0,
+      "legal_decisions": 17096,
+      "max_decision_us": 4177,
+      "missing_view": 0,
+      "postflop": 7069,
+      "samples": 512
+    },
+    {
+      "mode": "duplicates_and_reordering",
+      "source_sha256": "10087f9e60b6c0873c4551d620ed7c30e168620eda1997a8359cba5e9e43881b",
+      "events_sent": 190556,
+      "duplicated_or_late": 61483,
+      "dropped_public_actions": 0,
+      "legal_decisions": 17096,
+      "max_decision_us": 4241,
+      "missing_view": 0,
+      "postflop": 7069,
+      "samples": 512
+    },
+    {
+      "mode": "sparse_history",
+      "source_sha256": "10087f9e60b6c0873c4551d620ed7c30e168620eda1997a8359cba5e9e43881b",
+      "events_sent": 78696,
+      "duplicated_or_late": 25394,
+      "dropped_public_actions": 75771,
+      "legal_decisions": 17096,
+      "max_decision_us": 3587,
+      "missing_view": 0,
+      "postflop": 7069,
+      "samples": 512
+    }
+  ]
+}

@@ -1,0 +1,785 @@
+{
+  "binary_sha256": "6d305df121dfc99563e28b7895dbdda822108a57712005f90bd353872b97eb10",
+  "trials": [
+    {
+      "block_95pct_ci": [
+        103.62557867916634,
+        126.32206837965718
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 582,
+      "decisions": 19130,
+      "elapsed_s": 0.51393305,
+      "field": "baseline",
+      "hands": 17000,
+      "hero_bb_per_100": 114.97382352941176,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 15155,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 2,
+      "seed": 700040000,
+      "wins": 15195,
+      "won_pct": 89.38235294117646,
+      "won_pct_block_95pct_ci": [
+        88.9370312279248,
+        89.82767465442812
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        89.20899844107478,
+        109.28864861774875
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 626,
+      "decisions": 19012,
+      "elapsed_s": 0.503959868,
+      "field": "mixed",
+      "hands": 17000,
+      "hero_bb_per_100": 99.24882352941177,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 15165,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 2,
+      "seed": 700050000,
+      "wins": 15212,
+      "won_pct": 89.48235294117647,
+      "won_pct_block_95pct_ci": [
+        89.03879816442948,
+        89.92590771792347
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        160.86764758358342,
+        185.45705829877446
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 630,
+      "decisions": 36839,
+      "elapsed_s": 1.230790662,
+      "field": "baseline",
+      "hands": 25500,
+      "hero_bb_per_100": 173.16235294117894,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 21093,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 3,
+      "seed": 700060000,
+      "wins": 21121,
+      "won_pct": 82.82745098039216,
+      "won_pct_block_95pct_ci": [
+        82.29784487019268,
+        83.35705709059164
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        567.8363819584675,
+        625.5949905905564
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 512,
+      "decisions": 81202,
+      "elapsed_s": 2.147518942,
+      "field": "mixed",
+      "hands": 25500,
+      "hero_bb_per_100": 596.715686274512,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 13637,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 3,
+      "seed": 700070000,
+      "wins": 13806,
+      "won_pct": 54.141176470588235,
+      "won_pct_block_95pct_ci": [
+        53.680626221819466,
+        54.601726719357
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        154.19411898520173,
+        179.43117513244533
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 675,
+      "decisions": 56299,
+      "elapsed_s": 2.6384849839999998,
+      "field": "baseline",
+      "hands": 34000,
+      "hero_bb_per_100": 166.81264705882353,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 25067,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 4,
+      "seed": 700080000,
+      "wins": 25096,
+      "won_pct": 73.81176470588235,
+      "won_pct_block_95pct_ci": [
+        73.18507492847334,
+        74.43845448329137
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        174.50095902610767,
+        208.28786450330412
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 630,
+      "decisions": 71474,
+      "elapsed_s": 2.710570019,
+      "field": "mixed",
+      "hands": 34000,
+      "hero_bb_per_100": 191.3944117647059,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 20758,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 4,
+      "seed": 700090000,
+      "wins": 20768,
+      "won_pct": 61.082352941176474,
+      "won_pct_block_95pct_ci": [
+        60.500349796222785,
+        61.66435608613016
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        132.7440351860272,
+        158.28961187279634
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 633,
+      "decisions": 78181,
+      "elapsed_s": 3.39942097,
+      "field": "baseline",
+      "hands": 42500,
+      "hero_bb_per_100": 145.51682352941177,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 28406,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 5,
+      "seed": 700100000,
+      "wins": 28421,
+      "won_pct": 66.87294117647059,
+      "won_pct_block_95pct_ci": [
+        66.21609904708043,
+        67.52978330586075
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        939.9750448640677,
+        1012.4901316065204
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 413,
+      "decisions": 145111,
+      "elapsed_s": 4.705376921,
+      "field": "mixed",
+      "hands": 42500,
+      "hero_bb_per_100": 976.2325882352941,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 11770,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 5,
+      "seed": 700110000,
+      "wins": 11817,
+      "won_pct": 27.80470588235294,
+      "won_pct_block_95pct_ci": [
+        27.505222070284418,
+        28.104189694421464
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        121.46307451297454,
+        147.79555293800755
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 488,
+      "decisions": 100058,
+      "elapsed_s": 4.357266637,
+      "field": "baseline",
+      "hands": 51000,
+      "hero_bb_per_100": 134.62931372549104,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 31161,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 6,
+      "seed": 700120000,
+      "wins": 31168,
+      "won_pct": 61.11372549019608,
+      "won_pct_block_95pct_ci": [
+        60.43960740201419,
+        61.787843578377974
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        637.639250844775,
+        685.839180527777
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 415,
+      "decisions": 166053,
+      "elapsed_s": 6.372845173,
+      "field": "mixed",
+      "hands": 51000,
+      "hero_bb_per_100": 661.739215686276,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 14424,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 6,
+      "seed": 700130000,
+      "wins": 14440,
+      "won_pct": 28.313725490196077,
+      "won_pct_block_95pct_ci": [
+        27.991730806934125,
+        28.63572017345803
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        103.63007644844907,
+        126.77345296331563
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 378,
+      "decisions": 19181,
+      "elapsed_s": 0.334174793,
+      "field": "baseline",
+      "hands": 17000,
+      "hero_bb_per_100": 115.20176470588235,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 15139,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 2,
+      "seed": 701040000,
+      "wins": 15180,
+      "won_pct": 89.29411764705883,
+      "won_pct_block_95pct_ci": [
+        88.843955720282,
+        89.74427957383566
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        93.4147035208511,
+        112.60588471444302
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 401,
+      "decisions": 18959,
+      "elapsed_s": 0.33205331,
+      "field": "mixed",
+      "hands": 17000,
+      "hero_bb_per_100": 103.01029411764706,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 15201,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 2,
+      "seed": 701050000,
+      "wins": 15243,
+      "won_pct": 89.66470588235295,
+      "won_pct_block_95pct_ci": [
+        89.22356611997895,
+        90.10584564472694
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        152.62647126274848,
+        177.06960716862753
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 411,
+      "decisions": 36325,
+      "elapsed_s": 0.795719916,
+      "field": "baseline",
+      "hands": 25500,
+      "hero_bb_per_100": 164.848039215688,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 21132,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 3,
+      "seed": 701060000,
+      "wins": 21160,
+      "won_pct": 82.98039215686275,
+      "won_pct_block_95pct_ci": [
+        82.4512880602441,
+        83.5094962534814
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        560.9424160864978,
+        618.0258192076183
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 344,
+      "decisions": 81457,
+      "elapsed_s": 1.494766534,
+      "field": "mixed",
+      "hands": 25500,
+      "hero_bb_per_100": 589.484117647058,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 13648,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 3,
+      "seed": 701070000,
+      "wins": 13806,
+      "won_pct": 54.141176470588235,
+      "won_pct_block_95pct_ci": [
+        53.67896141070187,
+        54.603391530474596
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        154.87563938909594,
+        180.44141943443347
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 463,
+      "decisions": 56382,
+      "elapsed_s": 1.824634074,
+      "field": "baseline",
+      "hands": 34000,
+      "hero_bb_per_100": 167.6585294117647,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 25091,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 4,
+      "seed": 701080000,
+      "wins": 25106,
+      "won_pct": 73.84117647058824,
+      "won_pct_block_95pct_ci": [
+        73.20997019995474,
+        74.47238274122174
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        167.54781427133653,
+        199.29659749336938
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 400,
+      "decisions": 71241,
+      "elapsed_s": 1.8306174419999999,
+      "field": "mixed",
+      "hands": 34000,
+      "hero_bb_per_100": 183.42220588235296,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 20783,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 4,
+      "seed": 701090000,
+      "wins": 20792,
+      "won_pct": 61.15294117647059,
+      "won_pct_block_95pct_ci": [
+        60.567730270770475,
+        61.73815208217071
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        126.67466611392075,
+        152.33827506254983
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 503,
+      "decisions": 78264,
+      "elapsed_s": 3.268875995,
+      "field": "baseline",
+      "hands": 42500,
+      "hero_bb_per_100": 139.5064705882353,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 28212,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 5,
+      "seed": 701100000,
+      "wins": 28227,
+      "won_pct": 66.4164705882353,
+      "won_pct_block_95pct_ci": [
+        65.75706048798232,
+        67.07588068848828
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        877.9742840301097,
+        947.9951277345962
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 418,
+      "decisions": 145241,
+      "elapsed_s": 4.7845581,
+      "field": "mixed",
+      "hands": 42500,
+      "hero_bb_per_100": 912.984705882353,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 11712,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 5,
+      "seed": 701110000,
+      "wins": 11759,
+      "won_pct": 27.668235294117647,
+      "won_pct_block_95pct_ci": [
+        27.372508428560103,
+        27.96396215967519
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        120.48236766394373,
+        145.94194606154858
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 514,
+      "decisions": 99479,
+      "elapsed_s": 4.504680118,
+      "field": "baseline",
+      "hands": 51000,
+      "hero_bb_per_100": 133.21215686274616,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 31032,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 6,
+      "seed": 701120000,
+      "wins": 31047,
+      "won_pct": 60.87647058823529,
+      "won_pct_block_95pct_ci": [
+        60.197498349464155,
+        61.55544282700643
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        630.1460516484007,
+        678.5994385476776
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 421,
+      "decisions": 166174,
+      "elapsed_s": 6.386873747,
+      "field": "mixed",
+      "hands": 51000,
+      "hero_bb_per_100": 654.3727450980391,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 14435,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 6,
+      "seed": 701130000,
+      "wins": 14439,
+      "won_pct": 28.311764705882354,
+      "won_pct_block_95pct_ci": [
+        27.991693390356783,
+        28.631836021407924
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        97.67808904151701,
+        118.12367566436535
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 425,
+      "decisions": 18901,
+      "elapsed_s": 0.349678399,
+      "field": "baseline",
+      "hands": 17000,
+      "hero_bb_per_100": 107.90088235294118,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 15233,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 2,
+      "seed": 702040000,
+      "wins": 15284,
+      "won_pct": 89.90588235294118,
+      "won_pct_block_95pct_ci": [
+        89.46780419072594,
+        90.34396051515641
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        105.29152970523788,
+        127.58199970652683
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 388,
+      "decisions": 19077,
+      "elapsed_s": 0.3400971,
+      "field": "mixed",
+      "hands": 17000,
+      "hero_bb_per_100": 116.43676470588235,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 15224,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 2,
+      "seed": 702050000,
+      "wins": 15262,
+      "won_pct": 89.7764705882353,
+      "won_pct_block_95pct_ci": [
+        89.33520843648769,
+        90.2177327399829
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        166.14590281785627,
+        190.71645012332533
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 433,
+      "decisions": 36813,
+      "elapsed_s": 0.827291248,
+      "field": "baseline",
+      "hands": 25500,
+      "hero_bb_per_100": 178.4311764705908,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 21052,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 3,
+      "seed": 702060000,
+      "wins": 21072,
+      "won_pct": 82.63529411764706,
+      "won_pct_block_95pct_ci": [
+        82.1013419424254,
+        83.16924629286872
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        577.2385119723078,
+        635.4634488120018
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 355,
+      "decisions": 81581,
+      "elapsed_s": 1.471661777,
+      "field": "mixed",
+      "hands": 25500,
+      "hero_bb_per_100": 606.3509803921548,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 13680,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 3,
+      "seed": 702070000,
+      "wins": 13835,
+      "won_pct": 54.254901960784316,
+      "won_pct_block_95pct_ci": [
+        53.80037631962586,
+        54.70942760194277
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        151.6076573461153,
+        177.0173426538847
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 464,
+      "decisions": 56498,
+      "elapsed_s": 1.839041994,
+      "field": "baseline",
+      "hands": 34000,
+      "hero_bb_per_100": 164.3125,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 25032,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 4,
+      "seed": 702080000,
+      "wins": 25049,
+      "won_pct": 73.6735294117647,
+      "won_pct_block_95pct_ci": [
+        73.04181434916036,
+        74.30524447436905
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        184.11875104543668,
+        217.9236018957398
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 413,
+      "decisions": 72030,
+      "elapsed_s": 1.867302149,
+      "field": "mixed",
+      "hands": 34000,
+      "hero_bb_per_100": 201.02117647058824,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 20828,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 4,
+      "seed": 702090000,
+      "wins": 20837,
+      "won_pct": 61.28529411764706,
+      "won_pct_block_95pct_ci": [
+        60.694470290803025,
+        61.8761179444911
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        132.21768876512638,
+        158.08489947016776
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 491,
+      "decisions": 78133,
+      "elapsed_s": 3.128253561,
+      "field": "baseline",
+      "hands": 42500,
+      "hero_bb_per_100": 145.15129411764707,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 28321,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 5,
+      "seed": 702100000,
+      "wins": 28340,
+      "won_pct": 66.68235294117648,
+      "won_pct_block_95pct_ci": [
+        66.02157345669264,
+        67.34313242566031
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        916.498716438785,
+        987.6737541494502
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 421,
+      "decisions": 144931,
+      "elapsed_s": 4.752759837,
+      "field": "mixed",
+      "hands": 42500,
+      "hero_bb_per_100": 952.0862352941176,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 11666,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 5,
+      "seed": 702110000,
+      "wins": 11726,
+      "won_pct": 27.590588235294117,
+      "won_pct_block_95pct_ci": [
+        27.292134332996238,
+        27.889042137591996
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        126.9143408911733,
+        153.49056106961166
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 485,
+      "decisions": 99968,
+      "elapsed_s": 4.328408865,
+      "field": "baseline",
+      "hands": 51000,
+      "hero_bb_per_100": 140.20245098039248,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 31179,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 6,
+      "seed": 702120000,
+      "wins": 31191,
+      "won_pct": 61.15882352941176,
+      "won_pct_block_95pct_ci": [
+        60.487425154989964,
+        61.83022190383356
+      ],
+      "worst_hand_bb": -100.0
+    },
+    {
+      "block_95pct_ci": [
+        641.5597082704843,
+        690.842644670693
+      ],
+      "deal_blocks": 8500,
+      "decision_p99_us": 414,
+      "decisions": 165806,
+      "elapsed_s": 6.28230835,
+      "field": "mixed",
+      "hands": 51000,
+      "hero_bb_per_100": 666.2011764705886,
+      "mode": "fixed_100bb",
+      "net_positive_hands": 14443,
+      "policy_profile": 20,
+      "samples": 512,
+      "seats": 6,
+      "seed": 702130000,
+      "wins": 14459,
+      "won_pct": 28.350980392156863,
+      "won_pct_block_95pct_ci": [
+        28.029711296993117,
+        28.67224948732061
+      ],
+      "worst_hand_bb": -100.0
+    }
+  ]
+}

@@ -1,0 +1,345 @@
+{
+  "binary_sha256": "6d305df121dfc99563e28b7895dbdda822108a57712005f90bd353872b97eb10",
+  "checkpoints": {
+    "runs/bot/pressure-fresh-001/base-guard.json": "f3ed3b73624edfa43568e1248abe80b61deeb320f217e6d9a123d32879f9b6ca",
+    "runs/bot/history-sustained-001/checkpoint.json": "4e606ddc39214b413fe7df48f66c3781c1a0413f9d2af74ad6e6a89fe800bcb8"
+  },
+  "cases": [
+    {
+      "candidate_bb100": 17.802777777777777,
+      "candidate_bb100_ci95": [
+        13.564281694067187,
+        22.041273861488367
+      ],
+      "control_bb100": -3.5291666666666663,
+      "control_bb100_ci95": [
+        -5.980820718612196,
+        -1.0775126147211367
+      ],
+      "paired_delta_bb100": 21.331944444444446,
+      "paired_delta_bb100_ci95": [
+        16.640416130002635,
+        26.023472758886257
+      ],
+      "won_pct": 48.544444444444444,
+      "won_pct_ci95": [
+        47.849793274052416,
+        49.23909561483647
+      ],
+      "paired_delta_family_ci95": [
+        14.786858432124905,
+        27.877030456763986
+      ],
+      "paired_delta_first_second_half": [
+        14.227777777777778,
+        28.43611111111111
+      ],
+      "case": "short_pressure",
+      "unit": "deal block",
+      "units": 6000,
+      "candidate_hands": 36000,
+      "control_hands": 36000,
+      "seed": 817000000,
+      "rounded_to_menu": 0,
+      "depth": 20
+    },
+    {
+      "candidate_bb100": 86.7375,
+      "candidate_bb100_ci95": [
+        76.87452725430677,
+        96.60047274569322
+      ],
+      "control_bb100": 0.0,
+      "control_bb100_ci95": [
+        0.0,
+        0.0
+      ],
+      "paired_delta_bb100": 86.7375,
+      "paired_delta_bb100_ci95": [
+        76.87452725430677,
+        96.60047274569322
+      ],
+      "won_pct": 61.61944444444445,
+      "won_pct_ci95": [
+        60.79320465601745,
+        62.44568423287144
+      ],
+      "paired_delta_family_ci95": [
+        72.97780366415766,
+        100.49719633584233
+      ],
+      "paired_delta_first_second_half": [
+        92.2,
+        81.275
+      ],
+      "case": "reference_full_menu",
+      "unit": "deal block",
+      "units": 6000,
+      "candidate_hands": 36000,
+      "control_hands": 36000,
+      "seed": 818000000,
+      "rounded_to_menu": 0,
+      "depth": 100
+    },
+    {
+      "candidate_bb100": -13.036111111111111,
+      "candidate_bb100_ci95": [
+        -22.025242767137122,
+        -4.046979455085102
+      ],
+      "control_bb100": 0.0,
+      "control_bb100_ci95": [
+        0.0,
+        0.0
+      ],
+      "paired_delta_bb100": -13.036111111111111,
+      "paired_delta_bb100_ci95": [
+        -22.025242767137122,
+        -4.046979455085102
+      ],
+      "won_pct": 35.75277777777778,
+      "won_pct_ci95": [
+        35.04862464938007,
+        36.45693090617549
+      ],
+      "paired_delta_family_ci95": [
+        -25.576723875537027,
+        -0.49549834668519566
+      ],
+      "paired_delta_first_second_half": [
+        -17.352777777777778,
+        -8.719444444444443
+      ],
+      "case": "reference_common_menu",
+      "unit": "deal block",
+      "units": 6000,
+      "candidate_hands": 36000,
+      "control_hands": 36000,
+      "seed": 818000000,
+      "rounded_to_menu": 28616,
+      "depth": 100
+    },
+    {
+      "candidate_bb100": 96.5125,
+      "candidate_bb100_ci95": [
+        82.2962622823007,
+        110.7287377176993
+      ],
+      "control_bb100": 26.205555555555556,
+      "control_bb100_ci95": [
+        12.500541150675684,
+        39.910569960435424
+      ],
+      "paired_delta_bb100": 70.30694444444444,
+      "paired_delta_bb100_ci95": [
+        53.0024861288947,
+        87.61140275999418
+      ],
+      "won_pct": 53.375,
+      "won_pct_ci95": [
+        52.66697556632119,
+        54.08302443367881
+      ],
+      "paired_delta_family_ci95": [
+        46.16573491082012,
+        94.44815397806876
+      ],
+      "paired_delta_first_second_half": [
+        64.175,
+        76.43888888888888
+      ],
+      "case": "empirical_archive_mix",
+      "unit": "deal block",
+      "units": 6000,
+      "candidate_hands": 36000,
+      "control_hands": 36000,
+      "seed": 819000000,
+      "rounded_to_menu": 0,
+      "depth": "empirical"
+    },
+    {
+      "candidate_bb100": 92.83472222222223,
+      "candidate_bb100_ci95": [
+        71.28477379745482,
+        114.38467064698963
+      ],
+      "control_bb100": 33.99444444444445,
+      "control_bb100_ci95": [
+        13.437905633172424,
+        54.550983255716474
+      ],
+      "paired_delta_bb100": 58.84027777777778,
+      "paired_delta_bb100_ci95": [
+        30.914544505684358,
+        86.7660110498712
+      ],
+      "won_pct": 65.84444444444445,
+      "won_pct_ci95": [
+        65.02168091628404,
+        66.66720797260486
+      ],
+      "paired_delta_family_ci95": [
+        19.881475022541437,
+        97.79908053301412
+      ],
+      "paired_delta_first_second_half": [
+        73.18055555555556,
+        44.5
+      ],
+      "case": "deep_pressure",
+      "unit": "deal block",
+      "units": 6000,
+      "candidate_hands": 36000,
+      "control_hands": 36000,
+      "seed": 820000000,
+      "rounded_to_menu": 0,
+      "depth": 400
+    },
+    {
+      "candidate_bb100": 308.44722222222225,
+      "candidate_bb100_ci95": [
+        250.57685501050528,
+        366.31758943393925
+      ],
+      "control_bb100": 176.18194444444444,
+      "control_bb100_ci95": [
+        124.43822464507275,
+        227.92566424381613
+      ],
+      "paired_delta_bb100": 132.26527777777778,
+      "paired_delta_bb100_ci95": [
+        61.11772995136971,
+        203.41282560418585
+      ],
+      "won_pct": 54.35,
+      "won_pct_ci95": [
+        53.63005197149411,
+        55.06994802850589
+      ],
+      "paired_delta_family_ci95": [
+        33.00832164772342,
+        231.52223390783215
+      ],
+      "paired_delta_first_second_half": [
+        98.24722222222222,
+        166.28333333333333
+      ],
+      "case": "very_deep_mix",
+      "unit": "deal block",
+      "units": 6000,
+      "candidate_hands": 36000,
+      "control_hands": 36000,
+      "seed": 821000000,
+      "rounded_to_menu": 0,
+      "depth": 1000
+    },
+    {
+      "candidate_bb100": 108.82916666666667,
+      "candidate_bb100_ci95": [
+        96.65551782647145,
+        121.00281550686188
+      ],
+      "control_bb100": 38.90347222222222,
+      "control_bb100_ci95": [
+        24.462167478904767,
+        53.34477696553967
+      ],
+      "paired_delta_bb100": 69.92569444444445,
+      "paired_delta_bb100_ci95": [
+        53.827319176866744,
+        86.02406971202214
+      ],
+      "won_pct": 53.644444444444446,
+      "won_pct_ci95": [
+        53.0450214469107,
+        54.24386744197819
+      ],
+      "paired_delta_family_ci95": [
+        47.4670746252801,
+        92.38431426360879
+      ],
+      "paired_delta_first_second_half": [
+        56.30138888888889,
+        83.55
+      ],
+      "case": "carry_mixed",
+      "unit": "session",
+      "units": 300,
+      "hands_per_session": 240,
+      "candidate_hands": 72000,
+      "control_hands": 72000,
+      "seed": 927000000,
+      "depth": "empirical",
+      "candidate_session_risk": {
+        "losing_pct": 14.333333333333334,
+        "p90_drawdown_bb": 231.05,
+        "max_drawdown_bb": 922.0,
+        "busts": 124,
+        "any_bust_pct": 32.333333333333336,
+        "adaptive_replies": 0
+      },
+      "control_session_risk": {
+        "losing_pct": 44.0,
+        "p90_drawdown_bb": 351.0,
+        "max_drawdown_bb": 1017.5,
+        "busts": 261,
+        "any_bust_pct": 53.0,
+        "adaptive_replies": 0
+      }
+    },
+    {
+      "candidate_bb100": 40.57222222222222,
+      "candidate_bb100_ci95": [
+        29.06497967640535,
+        52.079464768039095
+      ],
+      "control_bb100": 62.02916666666667,
+      "control_bb100_ci95": [
+        47.38575729827741,
+        76.67257603505593
+      ],
+      "paired_delta_bb100": -21.456944444444446,
+      "paired_delta_bb100_ci95": [
+        -36.80080262210489,
+        -6.113086266784004
+      ],
+      "won_pct": 47.481944444444444,
+      "won_pct_ci95": [
+        46.84745335427446,
+        48.11643553461443
+      ],
+      "paired_delta_family_ci95": [
+        -42.862947947498796,
+        -0.05094094139009542
+      ],
+      "paired_delta_first_second_half": [
+        -37.333333333333336,
+        -5.580555555555557
+      ],
+      "case": "carry_adaptive",
+      "unit": "session",
+      "units": 300,
+      "hands_per_session": 240,
+      "candidate_hands": 72000,
+      "control_hands": 72000,
+      "seed": 937000000,
+      "depth": 100,
+      "candidate_session_risk": {
+        "losing_pct": 38.333333333333336,
+        "p90_drawdown_bb": 283.9,
+        "max_drawdown_bb": 626.5,
+        "busts": 199,
+        "any_bust_pct": 45.666666666666664,
+        "adaptive_replies": 12405
+      },
+      "control_session_risk": {
+        "losing_pct": 36.666666666666664,
+        "p90_drawdown_bb": 335.25,
+        "max_drawdown_bb": 583.5,
+        "busts": 239,
+        "any_bust_pct": 52.333333333333336,
+        "adaptive_replies": 1693
+      }
+    }
+  ]
+}

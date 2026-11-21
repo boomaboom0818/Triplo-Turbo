@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PATH="$HOME/.cargo/bin:$PATH"
+if ! command -v cc >/dev/null && [[ -x "$HOME/.local/share/triplo-turbo/build-tools/usr/bin/cc" ]]; then
+  export PATH="$HOME/.local/share/triplo-turbo/build-tools/usr/bin:$PATH"
+fi
+exec cargo "$@"
