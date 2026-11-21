@@ -331,6 +331,37 @@ fn preflop_v2(ctx: &V2Context, params: &V2Params, rng: &mut ChaCha8Rng) -> Decis
                 action = a;
                 reason = if value_3bet { "v2_pf_3bet_val" } else { "v2_pf_3bet_bluff" };
             }
+        } else if cost_bb > 10.0 {
+            // Facing an oversized open-raise or open-shove (> 10 BB): never fold AA/KK,
+            // and stack off appropriately against deep jams / maniac shovers!
+            let big_open_continue = is_aa_kk
+                || (pair && hi == 12 && (cost_bb <= 130.0 || r_maniac || odds <= 0.44))
+                || (hi == 14 && lo == 13 && suited && (cost_bb <= 120.0 || r_maniac || odds <= 0.43))
+                || (hi == 14 && lo == 13 && (cost_bb <= 80.0 || r_maniac || odds <= 0.41))
+                || (pair && hi == 11 && (cost_bb <= 60.0 || r_maniac || odds <= 0.39))
+                || (pair && hi == 10 && (cost_bb <= 35.0 || (r_maniac && cost_bb <= 85.0) || odds <= 0.36))
+                || (suited && hi == 14 && lo == 12 && (cost_bb <= 30.0 || (r_maniac && cost_bb <= 75.0)))
+                || (r_maniac && cost_bb <= 65.0 && (pair && hi >= 8 || (hi == 14 && lo >= 11)));
+            if big_open_continue {
+                let want_jam = is_aa_kk
+                    || (pair && hi == 12 && cost_bb <= 25.0)
+                    || (hi == 14 && lo == 13 && suited && cost_bb <= 20.0);
+                if want_jam
+                    && let Some(a) = l
+                        .jam
+                        .map(|_| Action::AllIn)
+                        .or_else(|| clamp_raise(l, ctx.bet.saturating_add(ctx.effective)))
+                {
+                    action = a;
+                    reason = "v2_pf_3bet_val";
+                } else if l.call.is_some() {
+                    action = Action::Call;
+                    reason = "v2_pf_defend_call";
+                } else if l.jam.is_some() {
+                    action = Action::AllIn;
+                    reason = "v2_pf_3bet_val";
+                }
+            }
         } else if l.call.is_some() {
             // Disciplined 0%-rake calling / BB defense logic (adapts to maniac openers!)
             let maniac_price_bonus = if r_maniac { 2.5 } else { 0.0 };

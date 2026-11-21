@@ -191,14 +191,20 @@ struct Memory {
 }
 
 impl Memory {
+    fn reset_table(&mut self) {
+        let hud = self.state.take_hud();
+        *self = Self::default();
+        self.state.set_hud(hud);
+    }
+
     fn reconcile_seat(&mut self, actual: Option<String>) {
         match actual {
             Some(id) if id != self.state.table => {
-                *self = Self::default();
+                self.reset_table();
                 self.state.table(&id);
                 self.unknown_prior_play = true;
             }
-            None if !self.state.table.is_empty() => *self = Self::default(),
+            None if !self.state.table.is_empty() => self.reset_table(),
             _ => (),
         }
     }
@@ -417,7 +423,7 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
                     }
                     "table_closed" | "season_ended" | "rebuy_confirmed" => {
                         job = None;
-                        *mem = Memory::default();
+                        mem.reset_table();
                         syncing = false;
                         recovery_since = None;
                         pending_rebuy = false;
@@ -431,7 +437,7 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
                         // The table is gone for this player. Give cash-out / server
                         // auto-rebuy a moment, then attempt a normal buy-in first.
                         job = None;
-                        *mem = Memory::default();
+                        mem.reset_table();
                         mem.queue_at = Some(Instant::now() + Duration::from_secs(1));
                         syncing = false;
                         recovery_since = None;
@@ -462,7 +468,7 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
                             }
                             "not_at_table" | "table_not_found" => {
                                 job = None;
-                                *mem = Memory::default();
+                                mem.reset_table();
                                 mem.queue_at = Some(Instant::now() + Duration::from_secs(1));
                                 syncing = false;
                                 recovery_since = None;
@@ -545,12 +551,37 @@ async fn session<S: AsyncRead + AsyncWrite + Unpin>(
                         if profile == crate::v2::V2_PROFILE
                             && let Some(ctx) = state.v2_context(l, state)
                         {
+                            let mut info = features(&v);
+                            let opp_meta: Vec<Value> = ctx
+                                .opponents
+                                .iter()
+                                .map(|o| {
+                                    json!({
+                                        "s": o.seat,
+                                        "pos": format!("{:?}", o.pos),
+                                        "pf": format!("{:?}", o.preflop_line),
+                                        "aggr": o.is_aggressor,
+                                        "h": o.hud.hands.round() as u32,
+                                        "vpip": (o.hud.vpip * 100.0).round() as u32,
+                                        "f2b": (o.hud.fold_to_bet * 100.0).round() as u32,
+                                    })
+                                })
+                                .collect();
+                            info["v2"] = json!({
+                                "pos": format!("{:?}", ctx.pos),
+                                "ip": ctx.in_position,
+                                "pfa": ctx.hero_was_pfa,
+                                "pf_r": ctx.preflop_raises,
+                                "st_r": ctx.street_raises,
+                                "fcr": ctx.facing_check_raise,
+                                "opps": opp_meta,
+                            });
                             tokio::task::spawn_blocking(move || {
                                 let result = crate::v2::decide_v2(&ctx, seed, SAMPLES);
                                 let _ = tx.blocking_send(Work {
                                     turn,
                                     result,
-                                    info: features(&v),
+                                    info,
                                     seed,
                                     t,
                                 });

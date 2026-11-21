@@ -38,6 +38,24 @@ pub fn legal(v: &Value) -> Legal {
     }
     l
 }
+fn parse_street(s: &str) -> Option<usize> {
+    match s {
+        "preflop" => Some(0),
+        "flop" => Some(1),
+        "turn" => Some(2),
+        "river" => Some(3),
+        "showdown" => Some(4),
+        _ => None,
+    }
+}
+fn board_street(board: &[Card]) -> usize {
+    match board.len() {
+        3 => 1,
+        4 => 2,
+        5 => 3,
+        _ => 0,
+    }
+}
 #[derive(Default, Clone, Copy)]
 struct Seat {
     active: bool,
@@ -56,6 +74,7 @@ pub struct State {
     button: Option<usize>,
     bb: Chips,
     pot: Chips,
+    street: usize,
     seats: [Seat; 6],
     names: [String; 6],
     defense: crate::defense::Defense,
@@ -72,6 +91,12 @@ pub struct State {
     board: Option<Vec<Card>>,
 }
 impl State {
+    pub fn take_hud(&mut self) -> HudTracker {
+        std::mem::take(&mut self.hud)
+    }
+    pub fn set_hud(&mut self, hud: HudTracker) {
+        self.hud = hud;
+    }
     pub fn table(&mut self, id: &str) {
         if !id.is_empty() && id != self.table {
             let hud = std::mem::take(&mut self.hud);
@@ -86,11 +111,11 @@ impl State {
         if self.hand != id {
             self.defense.next_hand();
             self.hud.new_hand();
-            self.names = Default::default();
             self.hand = id.into();
             self.hole = None;
             self.board = Some(vec![]);
             self.pot = 0;
+            self.street = 0;
             self.pf_raises = 0;
             self.limpers = 0;
             self.pfa_seat = None;
@@ -107,43 +132,55 @@ impl State {
             }
         }
     }
-    fn board(&mut self, board: Option<Vec<Card>>) {
-        if board.as_ref().is_some_and(|b| !b.is_empty()) {
-            self.defense.end_street();
+    fn advance_street(&mut self, next: usize, saw_flop_if_sd: bool) {
+        if next > self.street {
+            if self.street == 0 && (matches!(next, 1..=3) || (next == 4 && saw_flop_if_sd)) {
+                self.hud.on_street_advance(1);
+                self.defense.end_street();
+            }
+            self.street = next;
+            if next <= 3 {
+                self.street_raises = 0;
+                self.street_aggressor = None;
+                self.checked_street = [false; 6];
+                for s in &mut self.seats {
+                    s.bet = 0;
+                }
+            }
         }
-        if self.board != board {
-            let new_st = board.as_ref().map(|b| match b.len() {
-                3 => 1,
-                4 => 2,
-                5 => 3,
-                _ => 0,
-            });
-            if let Some(st) = new_st.filter(|&s| s > 0) {
-                self.hud.on_street_advance(st);
+    }
+    fn board(&mut self, board: Option<Vec<Card>>) {
+        if let Some(ref b) = board {
+            if !b.is_empty() {
+                self.defense.end_street();
             }
-            self.street_raises = 0;
-            self.street_aggressor = None;
-            self.checked_street = [false; 6];
-            for s in &mut self.seats {
-                s.bet = 0;
-            }
+            self.advance_street(board_street(b), false);
         }
         self.board = board;
     }
     fn seats(&mut self, v: &Value, snapshot: bool) {
-        for p in v.as_array().into_iter().flatten() {
+        let Some(arr) = v.as_array() else {
+            return;
+        };
+        let mut present = [false; 6];
+        for p in arr {
             if let Some(i) = seat(&p["seat"]) {
-                if snapshot || p.get("name").is_some() {
-                    self.names[i] = p["name"].as_str().unwrap_or("").to_owned();
+                present[i] = true;
+                if let Some(nm) = p["name"].as_str().filter(|n| !n.is_empty()) {
+                    self.names[i] = nm.to_owned();
+                } else if snapshot {
+                    self.names[i].clear();
                 }
                 let s = &mut self.seats[i];
                 if snapshot || p.get("in_hand").is_some() {
                     s.active = p["in_hand"].as_bool().unwrap_or(false);
-                } else if p["status"] != "empty" {
+                } else if let Some(st) = p["status"].as_str() {
+                    s.active = !matches!(st, "empty" | "sitting_out" | "busted" | "out");
+                } else {
                     s.active = true;
                 }
-                if !self.names[i].is_empty() {
-                    self.hud.register_seat(i, &self.names[i], s.active);
+                if s.active && !self.names[i].is_empty() {
+                    self.hud.register_seat(i, &self.names[i], true);
                 }
                 if let Some(x) = p["stack"].as_u64().and_then(|v| v.try_into().ok()) {
                     s.stack = x;
@@ -162,6 +199,21 @@ impl State {
                 }
                 if let Some(x) = p["folded"].as_bool() {
                     s.folded = x;
+                } else if p["status"].as_str() == Some("folded") {
+                    s.folded = true;
+                }
+            }
+        }
+        if !arr.is_empty() {
+            for i in 0..6 {
+                if !present[i] {
+                    self.seats[i].active = false;
+                    self.seats[i].bet = 0;
+                    self.seats[i].folded = false;
+                    self.seats[i].start_stack = None;
+                    if snapshot {
+                        self.names[i].clear();
+                    }
                 }
             }
         }
@@ -187,6 +239,9 @@ impl State {
                 self.bb = chip(&m["big_blind"]).unwrap_or(20);
                 self.pot = chip(&m["pot"]).unwrap_or(0);
                 self.board(cards(&m["board"]));
+                if let Some(st) = m["street"].as_str().and_then(parse_street) {
+                    self.advance_street(st, false);
+                }
                 self.seats(&m["seats"], true);
                 let h = &m["hero"];
                 self.hero = seat(&h["seat"]).or(self.hero);
@@ -204,21 +259,24 @@ impl State {
             "player_action" => {
                 if let Some(i) = seat(&m["seat"]) {
                     self.defense.action(m, self.hero, i);
-                    if let Some(nm) = m["name"].as_str().filter(|n| !n.is_empty())
-                        && self.names[i].is_empty()
-                    {
+                    self.seats[i].active = true;
+                    if let Some(nm) = m["name"].as_str().filter(|n| !n.is_empty()) {
                         self.names[i] = nm.to_owned();
                     }
                     let act_str = m["action"].as_str().unwrap_or("");
-                    let cur_board_len = self.board.as_ref().map_or(0, Vec::len);
-                    let act_street = match cur_board_len {
-                        0 => 0usize,
-                        3 => 1,
-                        4 => 2,
-                        _ => 3,
+                    let next_street = m["street"].as_str().and_then(parse_street);
+                    let act_street = if next_street.is_some() {
+                        self.street.min(3)
+                    } else {
+                        self.board.as_deref().map_or(0, board_street)
                     };
                     let owing = chip(&m["to_call_before"]).unwrap_or(0);
-                    let delta = chip(&m["contribution_delta"]).unwrap_or(0);
+                    let raw_delta = chip(&m["contribution_delta"]).unwrap_or(0);
+                    let delta = if act_str == "all_in" && raw_delta == 0 {
+                        chip(&m["stack_before"]).unwrap_or(self.seats[i].stack)
+                    } else {
+                        raw_delta
+                    };
                     let pot_b = chip(&m["pot_before"]).unwrap_or(self.pot);
                     let is_r = act_str == "raise" || (act_str == "all_in" && delta > owing);
                     let nm = m["name"]
@@ -289,18 +347,46 @@ impl State {
                     if let Some(c) = chip(&m["stack"]) {
                         s.stack = c;
                     }
-                    if let Some(d) = chip(&m["contribution_delta"]) {
-                        s.bet = s.bet.saturating_add(d);
+                    if delta > 0 {
+                        s.bet = s.bet.saturating_add(delta);
+                    }
+                    if let Some(p) = chip(&m["pot"]) {
+                        self.pot = p;
+                    }
+                    if let Some(ns) = next_street {
+                        let saw_flop_if_sd = act_str != "fold"
+                            && self.seats.iter().filter(|s| s.active && !s.folded).count() >= 2;
+                        self.advance_street(ns, saw_flop_if_sd);
                     }
                 }
             }
             "hand_result" => {
+                for w in m["winners"].as_array().into_iter().flatten() {
+                    if let Some(i) = seat(&w["seat"])
+                        && let Some(nm) = w["name"].as_str().filter(|n| !n.is_empty())
+                    {
+                        self.names[i] = nm.to_owned();
+                    }
+                }
                 let sd = m["shown_cards"]
                     .as_object()
                     .is_some_and(|o| o.len() >= 2)
-                    || self.board.as_ref().is_some_and(|b| b.len() == 5)
+                    || (self.street >= 3
+                        || self.board.as_ref().is_some_and(|b| b.len() == 5))
                         && self.seats.iter().filter(|s| s.active && !s.folded).count() >= 2;
                 self.hud.finish_hand(sd);
+                if let Some(fs) = m["final_stacks"].as_object() {
+                    for i in 0..6 {
+                        let stack = fs.get(&i.to_string()).and_then(chip).unwrap_or(0);
+                        if stack == 0 {
+                            self.seats[i].active = false;
+                            self.seats[i].stack = 0;
+                            self.names[i].clear();
+                        } else {
+                            self.seats[i].stack = stack;
+                        }
+                    }
+                }
                 self.hole = None;
                 self.board = None;
             }
@@ -532,7 +618,10 @@ impl State {
             limpers: self.limpers,
             hero_was_pfa: self.pfa_seat == Some(hero),
             street_raises,
-            facing_check_raise: self.checked_street[hero] && street_raises >= 2,
+            facing_check_raise: street_raises >= 2
+                && self
+                    .street_aggressor
+                    .is_some_and(|a| a != hero && self.checked_street[a]),
             opponents,
         })
     }
@@ -622,5 +711,133 @@ mod tests {
         snap["pot"] = json!(201);
         s.observe(&snap);
         assert_eq!(s.view(Legal::default()).unwrap().pot, 201);
+    }
+
+    #[test]
+    fn live_street_transitions_preserve_pf_lines_aggressor_and_hud_and_clear_busted_seats() {
+        let mut s = State::default();
+        s.table("t1");
+        s.observe(&json!({
+            "type": "table_joined",
+            "table_id": "t1",
+            "seat": 1,
+            "players": [
+                {"seat": 0, "name": "OppA", "stack": 1000, "status": "active"},
+                {"seat": 1, "name": "ramsay", "stack": 1000, "status": "active"},
+                {"seat": 2, "name": "OppB", "stack": 1000, "status": "active"},
+                {"seat": 3, "name": "OppC", "stack": 1000, "status": "active"}
+            ]
+        }));
+        // Hand 1: OppA (seat 0) opens, Hero (seat 1) 3-bets, OppB/OppC fold, OppA calls (closing preflop -> street="flop").
+        // Then OppA checks flop BEFORE hero gets your_turn (board still [] when player_action arrives!).
+        s.observe(&json!({"type": "hand_start", "hand_id": "h1", "seat": 1, "dealer_seat": 1, "blinds": {"small_blind": 10, "big_blind": 20}}));
+        s.observe(&json!({"type": "hole_cards", "hand_id": "h1", "cards": ["As", "Ks"]}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h1", "seat": 0, "name": "OppA", "action": "raise", "amount": 50, "street": "preflop", "to_call_before": 20, "contribution_delta": 50, "pot_before": 30, "pot": 80, "stack": 950}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h1", "seat": 1, "name": "ramsay", "action": "raise", "amount": 150, "street": "preflop", "to_call_before": 50, "contribution_delta": 150, "pot_before": 80, "pot": 230, "stack": 850}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h1", "seat": 2, "name": "OppB", "action": "fold", "street": "preflop", "to_call_before": 140, "contribution_delta": 0, "pot_before": 230, "pot": 230, "stack": 990}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h1", "seat": 3, "name": "OppC", "action": "fold", "street": "preflop", "to_call_before": 130, "contribution_delta": 0, "pot_before": 230, "pot": 230, "stack": 980}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h1", "seat": 0, "name": "OppA", "action": "call", "street": "flop", "to_call_before": 100, "contribution_delta": 100, "pot_before": 230, "pot": 330, "stack": 850}));
+        // Flop action by OppA arrives BEFORE your_turn updates board!
+        s.observe(&json!({"type": "player_action", "hand_id": "h1", "seat": 0, "name": "OppA", "action": "check", "street": "flop", "to_call_before": null, "contribution_delta": 0, "pot_before": 330, "pot": 330, "stack": 850}));
+        s.observe(&json!({
+            "type": "your_turn",
+            "hand_id": "h1",
+            "pot": 330,
+            "community_cards": ["Ad", "Jd", "7h"],
+            "players": [
+                {"seat": 0, "stack": 850, "bet": 0, "status": "active"},
+                {"seat": 1, "stack": 850, "bet": 0, "status": "active"}
+            ]
+        }));
+        let l_flop = Legal { fold: true, check: true, call: None, raise: Some((20, 850)), jam: Some(850) };
+        let ctx = s.v2_context(l_flop, &s).unwrap();
+        assert_eq!(ctx.opponents.len(), 1);
+        assert_eq!(ctx.opponents[0].preflop_line, PreflopLine::Call3Bet, "flop check must NOT overwrite Call3Bet with BbCheck");
+        assert!(ctx.hero_was_pfa);
+        assert_eq!(ctx.street_raises, 0);
+
+        // Hero bets flop, OppA check-raises flop -> facing_check_raise MUST be true!
+        s.observe(&json!({"type": "player_action", "hand_id": "h1", "seat": 1, "name": "ramsay", "action": "raise", "amount": 200, "street": "flop", "to_call_before": null, "contribution_delta": 200, "pot_before": 330, "pot": 530, "stack": 650}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h1", "seat": 0, "name": "OppA", "action": "raise", "amount": 500, "street": "flop", "to_call_before": 200, "contribution_delta": 500, "pot_before": 530, "pot": 1030, "stack": 350}));
+        let l_xr = Legal { fold: true, check: false, call: Some(300), raise: Some((800, 850)), jam: Some(850) };
+        let ctx_xr = s.v2_context(l_xr, &s).unwrap();
+        assert!(ctx_xr.facing_check_raise, "OppA checked then raised -> facing_check_raise must be true");
+        assert_eq!(ctx_xr.street_raises, 2);
+        assert!(ctx_xr.opponents[0].is_aggressor);
+
+        // Hand 1 ends with OppB and OppC busted (0 chips).
+        s.observe(&json!({
+            "type": "hand_result",
+            "hand_id": "h1",
+            "final_stacks": {"0": 1700, "1": 300, "2": 0, "3": 0},
+            "shown_cards": {"0": ["6d", "6c"], "1": ["As", "Ks"]}
+        }));
+
+        // Hand 2: HU between seat 0 and seat 1 (seats 2 & 3 busted!).
+        // Also test OppA betting turn BEFORE hero gets your_turn (must NOT wipe street_aggressor!).
+        s.observe(&json!({"type": "hand_start", "hand_id": "h2", "seat": 1, "dealer_seat": 1, "blinds": {"small_blind": 10, "big_blind": 20}}));
+        s.observe(&json!({"type": "hole_cards", "hand_id": "h2", "cards": ["Ah", "9h"]}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h2", "seat": 1, "name": "ramsay", "action": "raise", "amount": 50, "street": "preflop", "to_call_before": 10, "contribution_delta": 40, "pot_before": 30, "pot": 70, "stack": 250}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h2", "seat": 0, "name": "OppA", "action": "call", "street": "flop", "to_call_before": 30, "contribution_delta": 30, "pot_before": 70, "pot": 100, "stack": 1650}));
+        s.observe(&json!({"type": "player_action", "hand_id": "h2", "seat": 0, "name": "OppA", "action": "raise", "amount": 50, "street": "flop", "to_call_before": null, "contribution_delta": 50, "pot_before": 100, "pot": 150, "stack": 1600}));
+        s.observe(&json!({
+            "type": "your_turn",
+            "hand_id": "h2",
+            "pot": 150,
+            "community_cards": ["Kd", "3d", "Qh"],
+            "players": [
+                {"seat": 0, "stack": 1600, "bet": 50, "status": "active"},
+                {"seat": 1, "stack": 250, "bet": 0, "status": "active"}
+            ]
+        }));
+        let l_h2 = Legal { fold: true, check: false, call: Some(50), raise: Some((100, 250)), jam: Some(250) };
+        let ctx_h2 = s.v2_context(l_h2, &s).unwrap();
+        assert_eq!(ctx_h2.opponents.len(), 1, "busted seats 2 & 3 must NOT appear as ghost opponents");
+        assert_eq!(ctx_h2.opponents[0].preflop_line, PreflopLine::ColdCall, "OppA flop donk must NOT overwrite ColdCall with ThreeBet");
+        assert!(ctx_h2.opponents[0].is_aggressor, "your_turn board update must NOT wipe street_aggressor");
+        assert_eq!(ctx_h2.street_raises, 1);
+        assert!(ctx_h2.hero_was_pfa, "OppA flop donk must NOT overwrite hero_was_pfa");
+        assert!(ctx_h2.opponents[0].hud.hands >= 1.0, "OppA HUD must persist across hands without name wipe");
+    }
+
+    #[test]
+    fn openpoker_all_in_with_zero_delta_counts_as_raise() {
+        let mut s = State::default();
+        s.table("t2");
+        s.observe(&json!({"type": "hand_start", "hand_id": "h3", "seat": 1, "dealer_seat": 2, "blinds": {"small_blind": 10, "big_blind": 20}}));
+        s.observe(&json!({"type": "hole_cards", "hand_id": "h3", "cards": ["As", "Ad"]}));
+        s.observe(&json!({
+            "type": "player_action",
+            "hand_id": "h3",
+            "seat": 0,
+            "name": "Shover",
+            "action": "all_in",
+            "amount": null,
+            "street": "preflop",
+            "to_call_before": 20,
+            "contribution_delta": 0,
+            "pot_before": 30,
+            "pot": 30,
+            "stack_before": 2000,
+            "stack_after": 2000,
+            "stack": 2000
+        }));
+        s.observe(&json!({
+            "type": "your_turn",
+            "hand_id": "h3",
+            "pot": 2030,
+            "community_cards": [],
+            "players": [
+                {"seat": 0, "stack": 0, "bet": 2000, "status": "all_in"},
+                {"seat": 1, "stack": 2000, "bet": 0, "status": "active"}
+            ]
+        }));
+        let l = Legal { fold: true, check: false, call: Some(2000), raise: None, jam: None };
+        let ctx = s.v2_context(l, &s).unwrap();
+        assert_eq!(ctx.preflop_raises, 1);
+        assert_eq!(ctx.limpers, 0);
+        assert_eq!(ctx.opponents[0].preflop_line, PreflopLine::OpenRaise);
+        let d = crate::v2::decide_v2(&ctx, 1, 256);
+        assert_eq!(d.action, Action::Call, "AA facing 100 BB open-shove MUST call, got {d:?}");
     }
 }

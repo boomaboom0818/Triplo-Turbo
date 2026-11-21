@@ -247,7 +247,10 @@ fn build_v2_context(
         limpers: meta.limpers,
         hero_was_pfa: meta.pfa_seat == Some(seat),
         street_raises: meta.street_raises,
-        facing_check_raise: meta.checked_street[seat] && meta.street_raises >= 2,
+        facing_check_raise: meta.street_raises >= 2
+            && meta
+                .street_aggressor
+                .is_some_and(|a| a != seat && meta.checked_street[a]),
         opponents,
     }
 }
